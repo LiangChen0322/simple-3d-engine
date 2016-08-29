@@ -49,15 +49,15 @@ void g3::World::clear()
  */
 bool g3::World::on_scroll_event(GdkEventScroll* event)
 {
-	float zoomFactorPercent = 0.05;
+  float zoomFactorPercent = 0.05;
 
-	if (event->direction == GdkScrollDirection::GDK_SCROLL_UP) {
-		camera.zoomFactor += camera.zoomFactor * zoomFactorPercent;
-	} else {
-		camera.zoomFactor -= camera.zoomFactor * zoomFactorPercent;
-	}
+  if (event->direction == GdkScrollDirection::GDK_SCROLL_UP) {
+    camera.zoomFactor += camera.zoomFactor * zoomFactorPercent;
+  } else {
+    camera.zoomFactor -= camera.zoomFactor * zoomFactorPercent;
+  }
 
-	return true;
+  return true;
 }
 
 /**
