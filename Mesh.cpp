@@ -36,7 +36,8 @@ void g3::loadCube(g3::TriangleMesh& mesh)
   mesh.nVertices = 4;
   mesh.vertices.reset(new Vertex[mesh.nVertices]);
 
-  float vs[] {1,0,0, -1,0,0, 0,2,0, 0,1,2};
+  // float vs[] {1,0,0, -1,0,0, 0,0,-1.6, 0,2,-1};
+  float vs[] {0,0,0, 2,0,0, 0,2,0, 0,0,2};
   for (unsigned int i = 0, j = 0; i < mesh.nVertices; i++, j+=3) {
     mesh.vertices[i].pos = { vs[j], vs[j+1], vs[j+2] };
   }
@@ -52,7 +53,8 @@ void g3::loadCube(g3::TriangleMesh& mesh)
   }
 
   mesh.rotationX = mesh.rotationY = mesh.rotationZ = 0;
-  mesh.loc = {4, 2, -2};
+  mesh.loc = {0, 0, 0};
+  // mesh.loc = {4, 2, -2};
 }
 
 

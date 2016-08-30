@@ -14,7 +14,7 @@ width {w},
 height {h},
 frontBuffer {Gdk::Pixbuf::create(Gdk::Colorspace::COLORSPACE_RGB, true, 8, width, height)},
 targetFrameTime {33300000},
-camera { Vec3{17, 10, -20}, Vec3{1, 0, 2}, 1280 }
+camera { Vec3{15, 15, 15}, Vec3{-1, -1, -1}, 1280 }//camera { Vec3{17, 10, -20}, Vec3{1, 0, 2}, 1280 }
 {
 	// initializes the depth buffer.
 	depthBuffer.reset(new float[width * height]);
@@ -144,7 +144,6 @@ void g3::World::renderAxesAndGrid(const g3::Mat4& viewProjMat)
     drawLine(origoX, origoY, origo[2], endX, endY, axisEnd[2], axesColor[k]);
   }
 
-
   // render grid ground
   float step = 1;
   int size = 8; // size X size
@@ -207,20 +206,7 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
 {
   // The line visible?
   if ( (std::min(std::abs(x0), std::abs(x1)) > width) &&
-     (std::min(std::abs(y0), std::abs(y1)) > height) )
-  {
-    /*
-    std::cout
-    << x0 << ',' << y0 << '|'
-    << x1 << ',' << y1 << '|'
-    << width << '|'
-    << height << '|'
-    << (std::min(std::abs(x0), std::abs(x1)) > width/2) << '|'
-          << (std::min(std::abs(y0), std::abs(y1)) > height/2)
-    << std::endl;
-    */
-
-
+      (std::min(std::abs(y0), std::abs(y1)) > height) ) {
     return;
   }
 
@@ -250,6 +236,12 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
     z = z0 + (dz * gradient);
   }
 
+}
+
+void g3::World::GourandShaping(int x0, int y0, unsigned long colour0,
+)
+{
+  int x;
 }
 
 /**
@@ -322,9 +314,9 @@ bool g3::World::on_idle()
   // ...
 
   // Rotates the cube around the y axis in radians.
-  cube.rotationX += 0.01;
-  cube.rotationY += 0.01;
-  //cube.rotationZ += 0.001;
+  // cube.rotationX += 0.01;
+  // cube.rotationY += 0.01;
+  // cube.rotationZ += 0.001;
 
   return true;
 }

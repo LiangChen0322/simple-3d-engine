@@ -20,11 +20,6 @@ struct Vertex
    * 3D position of the vertex.
    */
   Vec3 pos;
-
-  // Other information could include:
-  // texture mapping coordinates, a surface normal,
-  // lighting values, etc.
-
 }; // struct Vertex
 
 
@@ -33,15 +28,7 @@ struct Vertex
  */
 struct Triangle
 {
-  /**
-   * Indices into the vertex list.
-   * In practice 16-bit indices are almost always used than 32-bit,
-   * to save memory and bandwith.
-   */
   unsigned int vertexIndex[3];
-
-  // Other information could include:
-  // a normal, material information, etc
 }; // struct Triangle
 
 
@@ -71,19 +58,9 @@ struct TriangleMesh
   std::unique_ptr<Triangle[]> faces;
 
   /**
-   * The rotation angle around the x axis in radians.
+   * The rotation angle around the x, y or z axis in radians.
    */
-  float rotationX;
-
-  /**
-   * The rotation angle around the y axis in radians.
-   */
-  float rotationY;
-
-  /**
-   * The rotation angle around the z axis in radians.
-   */
-  float rotationZ;
+  float rotationX, rotationY, rotationZ;
 
   /**
    * The position of the mesh in the world.

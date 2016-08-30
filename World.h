@@ -56,25 +56,15 @@ class World: public Gtk::DrawingArea {
   void renderAxesAndGrid(const Mat4& viewProjMat);
 
   /**
-   * Maps the x coordinate to the window coordinate system
+   * Maps the x/y coordinate to the window coordinate system
    */
   int mapXToWin(float x);
-
-  /**
-   * Maps the y coordinate to the window coordinate system
-   */
   int mapYToWin(float y);
 
-
-  /**
-   * Draws a point on the screen.
-   */
   void drawPoint(int x, int y, float z, unsigned long color);
-
-  /**
-   * Draws a line.
-   */
   void drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long color);
+
+  void GourandShaping()
 
   /**
    * Returns a time point in nanoseconds.
@@ -109,15 +99,7 @@ class World: public Gtk::DrawingArea {
    * 30 FPS = 33.3 milliseconds/frame == 33300000 nanoseconds/frame.
    */
   unsigned long targetFrameTime;
-
-  /**
-   * The beginning of a frame.
-   */
   unsigned long startFrameTime;
-
-  /**
-   * The end of a frame.
-   */
   unsigned long finishFrameTime;
 
   /**
