@@ -238,12 +238,6 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
 
 }
 
-void g3::World::GourandShaping(int x0, int y0, unsigned long colour0,
-)
-{
-  int x;
-}
-
 /**
  * Draws a point on the screen.
  */
@@ -320,3 +314,173 @@ bool g3::World::on_idle()
 
   return true;
 }
+
+
+#define SWAP(a, b)  { a = a + b; b = a - b; a = a - b; }
+
+void g3::World::handleGourandShaping(int px0, int py0, unsigned long colour0,
+                                     int px1, int py1, unsigned long colour1,
+                                     int px2, int py2, unsigned long colour2)
+{
+  float rbg[3][3];
+  float tv[3][2];       // triangle vertex
+  unsigned long colour[3] = {colour0, colour1, colour2};
+  float start_x, end_x, dsx, dex;
+
+  /*
+   * set the triangle to the shapes like following:
+   * v1 ------ v2                 v0
+   *   \      /     or           /  \
+   *    \    /                  /    \
+   *     \  /                  /      \
+   *      v0                  v1 ---- v2
+   */
+  tv[0][0] = px0 * 1.0;
+  tv[0][1] = py0 * 1.0;
+  tv[1][0] = px1 * 1.0;
+  tv[1][1] = py1 * 1.0;
+  tv[2][0] = px2 * 1.0;
+  tv[2][1] = py2 * 1.0;
+
+  int v0 = 0, v1 = 1, v2 = 2;
+
+  if (v[v0][1] < v[v1][1]) {
+    SWAP(v0, v1);
+  }
+  if (v[v0][1] < v[v2][1]) {
+    SWAP(v0, v2);
+  }
+  if (v[v1][0] > v[v2][0]) {
+    SWAP(v1, v2);
+  }
+
+  for (int i = 0; i < 3; i++) {
+    rgb[i][0] = (color[i] >> 24) & 0xff; // red
+    rgb[i][1] = (color[i] >> 16) & 0xff; // blue
+    rgb[i][2] = (color[i] >>  8) & 0xff; // green
+  }
+  int tmp_y = std::max(v[v1][1], v[v2][1]);
+  int dy = v[v0][1] - tmp_y;
+  for (int y = v[v0][1]; y > tmp_y; y--) {
+    start_x = end_x = v[v0][0];
+    if (v[v1][0] > v[v2][0]) {
+      dex = (v[v1][0] - v[v0][0]) * 1.0 / dy;
+      dsx = (v[v2][0] - v[v0][0]) * 1.0 / dy;
+    } else {
+      dsx = (v[v1][0] - v[v0][0]) * 1.0 / dy;
+      dex = (v[v2][0] - v[v0][0]) * 1.0 / dy;
+    }
+    for (int x = start_x; x <= end_x; x++) {
+      unsigned long color = createRGBA(0, 0, 128, 255);
+      drawPoint();
+    }
+  }
+
+  if (tmp_y != v[v1][1]) {
+    for ()
+  }
+
+  if (v[0][1] > v[1][1]) {
+    int dy = v[0][1] - v[1][1];
+    int sr = rgb[0][0], sg = rgb[0][1], sb = rgb[0][2];
+    int er = rgb[0][0], eg = rgb[0][1], eb = rgb[0][2];
+
+    double dr1 = (rgb[1][0] - rgb[0][0]) * 1.0 / dy;
+    double db1 = (rgb[1][2] - rgb[0][2]) * 1.0 / dy;
+    double dg1 = (rgb[1][1] - rgb[0][1]) * 1.0 / dy;
+
+    int dr2 = (rgb[2][0] - rgb[0][0]) * 1.0 / dy;
+    int dg2 = (rgb[2][0] - rgb[0][1]) * 1.0 / dy;
+    int db2 = (rgb[2][0] - rgb[0][2]) * 1.0 / dy;
+
+    for (int y = v[1][1]; y < v[0][1]; y++) {
+      int dx1 = (v[1][0] - v[0][0]) * 1.0 / dy;
+      int tx1 = 
+      for (int x = )
+    }
+  }
+}
+
+// void g3::World::handleGourandShaping(int px0, int py0, unsigned long colour0,
+//                                      int px1, int py1, unsigned long colour1,
+//                                      int px2, int py2, unsigned long colour2)
+// {
+//   unsigned int rgb[3][3];
+//   int v[3][2] = {{px0, py0}, {px1, py1}, {px2, py2}};
+//   unsigned long colour[3] = {colour0, colour1, colour2};
+
+//   /*
+//    * set the triangle to the shapes like following:
+//    * v1 ------ v2                 v0
+//    *   \      /     or           /  \
+//    *    \    /                  /    \
+//    *     \  /                  /      \
+//    *      v0                  v1 ----- v2
+//    */
+//   if (v[0][1] == v[1][1]) {
+//     SWAP(v[0][0], v[2][0]);
+//     SWAP(v[0][1], v[2][1]);
+//     SWAP(colour[0], colour[2]);
+//   } else if (v[0][1] == v[2][1]) {
+//     SWAP(v[0][0], v[1][0]);
+//     SWAP(v[0][1], v[1][1]);
+//     SWAP(colour[0], colour[1]);
+//   }
+//   if (v[1][0] > v[2][0]) {
+//     SWAP(v[1][0], v[2][0]);
+//     SWAP(v[1][1], v[2][1]);
+//     SWAP(colour[1], colour[2]);
+//   }
+
+//   for (int i = 0; i < 3; i++) {
+//     rgb[i][0] = (color[i] >> 24) & 0xff; // red
+//     rgb[i][1] = (color[i] >> 16) & 0xff; // blue
+//     rgb[i][2] = (color[i] >>  8) & 0xff; // grenn
+//   }
+
+//   if (v[0][1] > v[1][1]) {
+//     int dy = v[0][1] - v[1][1];
+//     int sr = rgb[0][0], sg = rgb[0][1], sb = rgb[0][2];
+//     int er = rgb[0][0], eg = rgb[0][1], eb = rgb[0][2];
+
+//     double dr1 = (rgb[1][0] - rgb[0][0]) * 1.0 / dy;
+//     double db1 = (rgb[1][2] - rgb[0][2]) * 1.0 / dy;
+//     double dg1 = (rgb[1][1] - rgb[0][1]) * 1.0 / dy;
+
+//     int dr2 = (rgb[2][0] - rgb[0][0]) * 1.0 / dy;
+//     int dg2 = (rgb[2][0] - rgb[0][1]) * 1.0 / dy;
+//     int db2 = (rgb[2][0] - rgb[0][2]) * 1.0 / dy;
+
+//     for (int y = v[1][1]; y < v[0][1]; y++) {
+//       int dx1 = (v[1][0] - v[0][0]) * 1.0 / dy;
+//       int tx1 = 
+//       for (int x = )
+//     }
+//   }
+// }
+
+// void g3::World::drawTriangle(int x0, int y0, unsigned long colour0,
+//                              int x1, int y1, unsigned long colour1,
+//                              int x2, int y2, unsigned long colour2
+// )
+// {
+//   int v[3][2];
+
+//   if (y0 == y1 && y1 == y2)
+//     return;
+
+//   if (y0 < y1) {
+//     SWAP(x0, x1);
+//     SWAP(y0, y1);
+//   }
+//   if (y0 < y2) {
+//     SWAP(x0, x2);
+//     SWAP(y0, y2);
+//   }
+//   if (y1 < y2) {
+//     SWAP(x1, x2);
+//     SWAP(y1, y2);
+//   }
+
+//   if (y0 == y1)
+// }
