@@ -12,18 +12,11 @@ namespace g3
  ******************************************************************************/
 struct Camera
 {
-  /**
-   * The postition of the camera.
-   */
   Vec3 eye;
-
-  /**
-   * The point that the camera is looking at.
-   */
   Vec3 target;
 
   /**
-   * Zoom factor 
+   * Zoom factor
    */
   float zoomFactor;
 }; // class Camera

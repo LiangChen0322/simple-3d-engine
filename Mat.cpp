@@ -2,9 +2,6 @@
 #include "Mat.h"
 #include <cmath>
 
-/**
- * Transponses a matrix.
- */
 g3::Mat4 g3::transponse(const Mat4& mat)
 {
 	return {
@@ -13,11 +10,9 @@ g3::Mat4 g3::transponse(const Mat4& mat)
 		mat[2], mat[6], mat[10], mat[14],
 		mat[3], mat[7], mat[11], mat[15]
 	};
+	// can I make better performance?
 }
 
-/**
- * Transforms a 3D point with a 4x4 matrix.
- */
 g3::Vec3 g3::transformP3(const Vec3& vec, const Mat4& mat)
 {
 	float x =  (vec[0] * mat[0]) + (vec[1] * mat[4]) + (vec[2] * mat[8])  + mat[12];
@@ -25,8 +20,7 @@ g3::Vec3 g3::transformP3(const Vec3& vec, const Mat4& mat)
 	float z =  (vec[0] * mat[2]) + (vec[1] * mat[6]) + (vec[2] * mat[10]) + mat[14];
 	float w = (vec[0] * mat[3]) + (vec[1] * mat[7]) + (vec[2] * mat[11]) + mat[15];	
 	
-	if (w != 1 && w != 0)
-	{
+	if (w != 1 && w != 0) {
 		x /= w;
 		y /= w;
 		z /= w;
@@ -47,13 +41,6 @@ g3::Vec3 g3::transformV3(const Vec3& vec, const Mat4& mat)
 	};
 }
 
-
-/**
- * Creates a scaling matrix in row major order.
- *
- * @param scale value to scale by on all axes (x,y,z).
- * @return a 4x4 uniform scaling matrix
- */
 g3::Mat4 g3::createScaleMatrix(const float scale)
 {
 	return Mat4 {
@@ -64,14 +51,6 @@ g3::Mat4 g3::createScaleMatrix(const float scale)
 	};
 }
 
-/**
- * Creates a scaling matrix in row major order.
- *
- * @param scaleX value to scale by on the x-axis
- * @param scaleY value to scale by on the y-axis
- * @param scaleZ value to scale by on the x-axis
- * @return a 4x4 scaling matrix
- */
 g3::Mat4 g3::createScaleMatrix(const float scaleX, const float scaleY, const float scaleZ)
 {
 	return Mat4 {
@@ -82,15 +61,6 @@ g3::Mat4 g3::createScaleMatrix(const float scaleX, const float scaleY, const flo
 	};
 }
 
-/**
- * Creates a translation matrix in row major order.
- *
- * @param valX value to translate by on the x-axis
- * @param valY value to translate by on the y-axis
- * @param valZ value to translate by on the x-axis
- * @return a 4x4 translation matrix
- * 
- */
 g3::Mat4 g3::createTranslationMatrix(const float valX, const float valY, const float valZ)
 {
 	return Mat4 {
@@ -101,15 +71,6 @@ g3::Mat4 g3::createTranslationMatrix(const float valX, const float valY, const f
 	};
 }
 
-/**
- * Returns a rotation matrix in row major order that can be used to rotate 
- * a set of vertices around the x-axis.
- *
- * @param rad The amount, in radians, in which to rotate around the x-axis.
- * Note that you can use toRad to convert degrees to radians. 
- *
- * @return a 4x4 rotation matrix 
- */
 g3::Mat4 g3::createRotationXMatrix(const float rad)
 {
 	return Mat4 {
@@ -120,15 +81,6 @@ g3::Mat4 g3::createRotationXMatrix(const float rad)
 	};
 }
 
-/**
- * Returns a rotation matrix in row major order that can be used to rotate 
- * a set of vertices around the y-axis.
- *
- * @param rad The amount, in radians, in which to rotate around the y-axis.
- * Note that you can use toRad to convert degrees to radians. 
- *
- * @return a 4x4 rotation matrix 
- */
 g3::Mat4 g3::createRotationYMatrix(const float rad)
 {
 	return Mat4 {
@@ -139,15 +91,6 @@ g3::Mat4 g3::createRotationYMatrix(const float rad)
 	};
 }
 
-/**
- * Returns a rotation matrix in row major order that can be used to rotate 
- * a set of vertices around the z-axis.
- *
- * @param rad The amount, in radians, in which to rotate around the z-axis.
- * Note that you can use toRad to convert degrees to radians. 
- *
- * @return a 4x4 rotation matrix 
- */
 g3::Mat4 g3::createRotationZMatrix(const float rad)
 {
 	return Mat4 {
@@ -158,19 +101,6 @@ g3::Mat4 g3::createRotationZMatrix(const float rad)
 	};
 }
 
-/**
- * Creates a left-handed look-at matrix in row major order.
- *
- * @param eye A Vec3 structure that defines the camera point. This value is used
- * in translation.
- *
- * @param target A Vec3 structure that defines the camera look-at target.
- *
- * @param up A Vec3 structure that defines the up direction of the current 
- * world, usually [0, 1, 0].
- *
- * @return A left-handed look-at matrix in row major order.
- */
 g3::Mat4 g3::createLookAtLHMatrix(const Vec3& eye, const Vec3& target, const Vec3& up)
 {
 	Vec3 F = g3::normalize(target - eye);
@@ -185,18 +115,6 @@ g3::Mat4 g3::createLookAtLHMatrix(const Vec3& eye, const Vec3& target, const Vec
 	};
 }
 
-/**
- * Creates a left-handed perspective projection matrix in row major order 
- * based on a field of view.
- *
- * @param fieldOfViewY Field of view in the y direction, in radians.
- * @param aspectRatio Aspect ratio, defined as the view space width divided
- * by height.
- *
- * @param zNearPlane Z-value of the near view plane.
- * @param zFarPlane Z-value of the far view plane.
- * @return A left-handed perspective projection matrix.
- */
 g3::Mat4 g3::createPerspectiveFovLHMatrix(float fieldOfViewY, float aspectRatio, float zNearPlane, float zFarPlane)
 {
 	// cot(x) = tan(PI/2 - x)

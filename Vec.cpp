@@ -13,4 +13,3 @@ g3::Vec3 g3::crossProduct(const g3::Vec3& lhs, const g3::Vec3& rhs)
   };
   return res;
 }
-

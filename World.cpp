@@ -202,41 +202,34 @@ inline unsigned long g3::createRGBA(int r, int g, int b, int a)
 /**
  * Draws a line.
  */
-void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long color)
+void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long colour)
 {
-  // The line visible?
   if ( (std::min(std::abs(x0), std::abs(x1)) > width) &&
       (std::min(std::abs(y0), std::abs(y1)) > height) ) {
     return;
   }
 
-  int dx = std::abs(x1 - x0);
-  int dy = std::abs(y1 - y0);
-  float dz = std::abs(z1 - z0);
-  int sx = (x0 < x1) ? 1 : -1;
-  int sy = (y0 < y1) ? 1 : -1;
+  float x = (float)x0;
+  float y = (float)y0;
+  float z = (float)z0;
+  int steps = std::abs(x1 - x0) > std::abs(y1 - y0) ? std::abs(x1 - x0) : std::abs(y1 - y0);
 
-  int err = dx - dy;
-  float gradient = 0;
+  float dx = (float)(x1 - x0) / steps;
+  float dy = (float)(y1 - y0) / steps;
+  float dz = (z1 - z0) / steps;
 
-  int x = x0;
-  int y = y0;
-  int z = z0;
+  do {
+    drawPoint((int)x, (int)y, (int)z, colour);
+    if ((int)x != x1)
+      x += dx;
+    if((int)y != y1)
+      y += dy;
 
-  while (true) {
-    drawPoint(x, y, z, color);
-
-    if ((x == x1) && (y == y1)) break;
-    int e2 = 2 * err;
-    if (e2 > -dy) { err -= dy; x += sx; }
-    if (e2 < dx) { err += dx; y += sy; }
-
-    // interpolate z depth values
-    gradient = (dx > dy) ?  ((x-x0) / dx) : ((y-y0) / dy);
-    z = z0 + (dz * gradient);
-  }
-
+    if (((int)x == x1) && ((int)y == y1))
+      break;
+  } while (true);
 }
+
 
 /**
  * Draws a point on the screen.
@@ -315,15 +308,15 @@ bool g3::World::on_idle()
   return true;
 }
 
-
+#if 0
 #define SWAP(a, b)  { a = a + b; b = a - b; a = a - b; }
 
-void g3::World::handleGourandShaping(int px0, int py0, unsigned long colour0,
-                                     int px1, int py1, unsigned long colour1,
-                                     int px2, int py2, unsigned long colour2)
+void g3::World::handleGourandShaping(int px0, int py0, float pz0, unsigned long colour0,
+                                     int px1, int py1, float pz1, unsigned long colour1,
+                                     int px2, int py2, float pz2, unsigned long colour2)
 {
   float rbg[3][3];
-  float tv[3][2];       // triangle vertex
+  float tv[3][3];       // triangle vertex
   unsigned long colour[3] = {colour0, colour1, colour2};
   float start_x, end_x, dsx, dex;
 
@@ -337,10 +330,13 @@ void g3::World::handleGourandShaping(int px0, int py0, unsigned long colour0,
    */
   tv[0][0] = px0 * 1.0;
   tv[0][1] = py0 * 1.0;
+  tv[0][2] = pz0;
   tv[1][0] = px1 * 1.0;
   tv[1][1] = py1 * 1.0;
+  tv[0][2] = pz1;
   tv[2][0] = px2 * 1.0;
   tv[2][1] = py2 * 1.0;
+  tv[0][2] = pz2;
 
   int v0 = 0, v1 = 1, v2 = 2;
 
@@ -484,3 +480,4 @@ void g3::World::handleGourandShaping(int px0, int py0, unsigned long colour0,
 
 //   if (y0 == y1)
 // }
+#endif

@@ -16,16 +16,9 @@ namespace g3
  */
 struct Vertex
 {
-  /**
-   * 3D position of the vertex.
-   */
   Vec3 pos;
-}; // struct Vertex
+};
 
-
-/**
- * The information we store at the triangle level.
- */
 struct Triangle
 {
   unsigned int vertexIndex[3];
@@ -37,47 +30,18 @@ struct Triangle
  */
 struct TriangleMesh
 {
-  /**
-   * The number of vertices.
-   */
   unsigned int nVertices;
-
-  /**
-   * The vertex list.
-   */
   std::unique_ptr<Vertex[]> vertices;
 
-  /**
-   * The number of triangles.
-   */
   unsigned int nFaces;
-
-  /**
-   * The triangle list.
-   */
   std::unique_ptr<Triangle[]> faces;
 
-  /**
-   * The rotation angle around the x, y or z axis in radians.
-   */
   float rotationX, rotationY, rotationZ;
 
-  /**
-   * The position of the mesh in the world.
-   */
   Vec3 loc;
 }; // struct TriangleMesh
 
-
-/**
- * Loads a cube triangle mesh.
- */
 void loadCube(TriangleMesh& mesh);
-
-
-/**
- * Calculates the world transformation matrix of the triangle mesh object.
- */
 Mat4 getWorldMatrix(TriangleMesh& mesh);
 
 

@@ -17,54 +17,24 @@ class World: public Gtk::DrawingArea {
   World(unsigned int w, unsigned int h);
   virtual ~World(){};
 
-  /**
-   * This idle callback function is executed as often as possible, 
-   * hence it is ideal for processing intensive tasks.
-   */
   bool on_idle();
 
-  /**
-   * The drawing function, called by the GUI.
-   */
   virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
-
-  /**
-   * Detects mouse wheel movements. Called by the GUI.
-   */
   virtual bool on_scroll_event(GdkEventScroll* event);
 
   private:
 
-  /**
-   * Clears the buffers.
-   */
   void clear();
-
-  /**
-   * Renders the scene.
-   */
   void render();
 
-  /**
-   * Renders the cube wireframe.
-   */
   void renderWireframe(const Mat4& viewProjMat);
-
-  /**
-   * Renders the axes and the grid ground.
-   */
   void renderAxesAndGrid(const Mat4& viewProjMat);
 
-  /**
-   * Maps the x/y coordinate to the window coordinate system
-   */
   int mapXToWin(float x);
   int mapYToWin(float y);
 
   void drawPoint(int x, int y, float z, unsigned long color);
   void drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long color);
-
-  void GourandShaping()
 
   /**
    * Returns a time point in nanoseconds.
@@ -77,10 +47,6 @@ class World: public Gtk::DrawingArea {
    * The width of the screen.
    */
   unsigned int width;
-
-  /**
-   * The height of the screen
-   */
   unsigned int height;
 
   /**
