@@ -34,29 +34,21 @@ class World: public Gtk::DrawingArea {
   int mapYToWin(float y);
 
   void drawPoint(int x, int y, float z, unsigned long color);
-  void drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long color);
+  void drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long colour0, unsigned long colour1);
+  void handleGourandShaping(int px0, int py0, float pz0, unsigned long color0,
+                                     int px1, int py1, float pz1, unsigned long color1,
+                                     int px2, int py2, float pz2, unsigned long color2);
 
-  /**
-   * Returns a time point in nanoseconds.
-   *
-   * @return Time point in nanoseconds.
-   */
   unsigned long clock_time();
 
-  /**
-   * The width of the screen.
-   */
+  /* The width of the screen. */
   unsigned int width;
   unsigned int height;
 
-  /**
-   * Front buffer.
-   */
+  /* Front buffer. */
   Glib::RefPtr<Gdk::Pixbuf> frontBuffer;
 
-  /**
-   * Depth buffer
-   */
+  /* Depth buffer */
   std::unique_ptr<float[]> depthBuffer;
 
   /**
@@ -68,16 +60,8 @@ class World: public Gtk::DrawingArea {
   unsigned long startFrameTime;
   unsigned long finishFrameTime;
 
-  /**
-   * The camera that we look from.
-   */
   Camera camera;
-
-  /**
-   * The cube model.
-   */
   TriangleMesh cube;
-
 };
 
 /**

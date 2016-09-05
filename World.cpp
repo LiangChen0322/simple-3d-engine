@@ -16,32 +16,46 @@ frontBuffer {Gdk::Pixbuf::create(Gdk::Colorspace::COLORSPACE_RGB, true, 8, width
 targetFrameTime {33300000},
 camera { Vec3{15, 15, 15}, Vec3{-1, -1, -1}, 1280 }//camera { Vec3{17, 10, -20}, Vec3{1, 0, 2}, 1280 }
 {
-	// initializes the depth buffer.
-	depthBuffer.reset(new float[width * height]);
+  // initializes the depth buffer.
+  depthBuffer.reset(new float[width * height]);
 
-	// start frame time
-	startFrameTime = clock_time();
+  // start frame time
+  startFrameTime = clock_time();
 
-	g3::loadCube(cube);
-	
-	// enable mouse wheel detection
-	add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK);
+  g3::loadCube(cube);
 
-	// register idle function
-	Glib::signal_idle().connect(sigc::mem_fun(*this, &World::on_idle));
+  // enable mouse wheel detection
+  add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK);
+
+  // register idle function
+  Glib::signal_idle().connect(sigc::mem_fun(*this, &World::on_idle));
 }
 
+inline unsigned long g3::createRGBA(int r, int g, int b, int a)
+{
+  return ((r & 0xff) << 24) 
+    + ((g & 0xff) << 16) 
+    + ((b & 0xff) << 8) 
+    + (a & 0xff);
+}
+
+static inline void getRGBA(unsigned long color, int *r, int *g, int *b, int *a)
+{
+  *r = (color >> 24) & 0xff; // red
+  *g = (color >> 16) & 0xff; // blue
+  *b = (color >>  8) & 0xff; // grenn
+  *a = color & 0xff;
+}
 
 /**
  * Clears the buffers.
  */
 void g3::World::clear()
 {
-	// Fill the buffer with color white
-	frontBuffer->fill(0xfafad2ff);
-
-	// Clears the depth buffer
-	std::fill(depthBuffer.get(), depthBuffer.get() + (width*height), std::numeric_limits<float>::infinity());
+  // Fill the buffer with color white
+  frontBuffer->fill(0xfafad2ff);
+  // Clears the depth buffer
+  std::fill(depthBuffer.get(), depthBuffer.get() + (width*height), std::numeric_limits<float>::infinity());
 }
 
 /**
@@ -63,15 +77,15 @@ bool g3::World::on_scroll_event(GdkEventScroll* event)
 /**
  * The drawing function, called by the GUI.
  */
-bool g3::World::on_draw(const Cairo::RefPtr<Cairo::Context>& cr) {
-	
-	render();
-	
-	// Draw the buffer
-	Gdk::Cairo::set_source_pixbuf(cr, frontBuffer);
-	cr->paint();
+bool g3::World::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+{
+  render();
 
-	return true;
+  // Draw the buffer
+  Gdk::Cairo::set_source_pixbuf(cr, frontBuffer);
+  cr->paint();
+
+  return true;
 }
 
 /**
@@ -85,7 +99,6 @@ void g3::World::render()
 
   Mat4 viewProjMatrix = g3::createLookAtLHMatrix(camera.eye, camera.target, upWorld)
           * g3::createPerspectiveFovLHMatrix(0.78f, width / (float)height, 0.01f, 25.0f);
-
 
   renderAxesAndGrid(viewProjMatrix);	
   renderWireframe(viewProjMatrix);
@@ -101,24 +114,27 @@ void g3::World::renderWireframe(const g3::Mat4& viewProjMatrix)
   for (unsigned int i = 0; i < cube.nFaces; i++) {
     Vec3 v[3];
     int mapToWin[6];
+    unsigned long color[3];
 
     for (unsigned int j = 0; j < 3; j++) {
       v[j] = transformP3( cube.vertices[ cube.faces[i].vertexIndex[j] ].pos, transformMatrix );
 
       mapToWin[2*j]   = mapXToWin( v[j][0] );
       mapToWin[2*j+1] = mapYToWin( v[j][1] );
+
+      ColorRGBA tc = cube.vertices[ cube.faces[i].vertexIndex[j] ].color;
+      color[j] = createRGBA(tc.r, tc.g, tc.b, tc.a);
     }
 
-    unsigned long color = createRGBA(0, 0, 128, 255);
-    drawLine(mapToWin[0], mapToWin[1], v[0][2], mapToWin[2], mapToWin[3], v[1][2], color);
-    drawLine(mapToWin[2], mapToWin[3], v[1][2], mapToWin[4], mapToWin[5], v[2][2], color);
-    drawLine(mapToWin[4], mapToWin[5], v[2][2], mapToWin[0], mapToWin[1], v[0][2], color);
+    drawLine(mapToWin[0], mapToWin[1], v[0][2], mapToWin[2], mapToWin[3], v[1][2], color[0], color[1]);
+    drawLine(mapToWin[2], mapToWin[3], v[1][2], mapToWin[4], mapToWin[5], v[2][2], color[1], color[2]);
+    drawLine(mapToWin[4], mapToWin[5], v[2][2], mapToWin[0], mapToWin[1], v[0][2], color[2], color[0]);
+    handleGourandShaping(mapToWin[0], mapToWin[1], v[0][2],  color[0],
+                         mapToWin[2], mapToWin[3], v[1][2],  color[1],
+                         mapToWin[4], mapToWin[5], v[2][2],  color[2]);
   }
 }
 
-/**
- * Renders the axes and the grid ground.
- */
 void g3::World::renderAxesAndGrid(const g3::Mat4& viewProjMat)
 {
   Mat4 staticMatrix = createScaleMatrix(1) * viewProjMat;
@@ -141,7 +157,7 @@ void g3::World::renderAxesAndGrid(const g3::Mat4& viewProjMat)
     Vec3 axisEnd = transformP3( axes[k], staticMatrix );
     int endX = mapXToWin( axisEnd[0] );
     int endY = mapYToWin( axisEnd[1] );
-    drawLine(origoX, origoY, origo[2], endX, endY, axisEnd[2], axesColor[k]);
+    drawLine(origoX, origoY, origo[2], endX, endY, axisEnd[2], axesColor[k], axesColor[k]);
   }
 
   // render grid ground
@@ -165,44 +181,22 @@ void g3::World::renderAxesAndGrid(const g3::Mat4& viewProjMat)
 		Vec3 g2 = transformP3( grid[n+1], staticMatrix );
 		int g2X = mapXToWin( g2[0] );
 		int g2Y = mapYToWin( g2[1] );
-		drawLine(g1X, g1Y, g1[2], g2X, g2Y, g2[2], gridColor);
+		drawLine(g1X, g1Y, g1[2], g2X, g2Y, g2[2], gridColor, gridColor);
 	}
 
 }
 
-/**
- * Maps the x coordinate to the window coordinate system
- */
 inline int g3::World::mapXToWin(float x)
 {
 	return ( x * camera.zoomFactor / (width/(float)height)  ) + (width / 2.0f);
 }
 
-/**
- * Maps the y coordinate to the window coordinate system
- */
 inline int g3::World::mapYToWin(float y)
 {
 	return ( -y * camera.zoomFactor ) + (height / 2.0f);
 }
 
-
-/**
- * Creates an RGBA color as a long.
- */
-inline unsigned long g3::createRGBA(int r, int g, int b, int a)
-{
-	return ((r & 0xff) << 24) 
-		+ ((g & 0xff) << 16) 
-		+ ((b & 0xff) << 8) 
-		+ (a & 0xff);
-}
-
-
-/**
- * Draws a line.
- */
-void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long colour)
+void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long color0, unsigned long color1)
 {
   if ( (std::min(std::abs(x0), std::abs(x1)) > width) &&
       (std::min(std::abs(y0), std::abs(y1)) > height) ) {
@@ -218,12 +212,31 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
   float dy = (float)(y1 - y0) / steps;
   float dz = (z1 - z0) / steps;
 
+  int rgbi[2][4];
+  float rgb[2][3];
+  float drgb[3];
+
+  getRGBA(color0, rgbi[0], rgbi[0] + 1, rgbi[0] + 2, rgbi[0] + 3);
+  getRGBA(color1, rgbi[1], rgbi[1] + 1, rgbi[1] + 2, rgbi[1] + 3);
+
+  for (int i = 0; i < 3; i++) {
+    rgb[0][i] = (float)rgbi[0][i];
+    rgb[1][i] = (float)rgbi[1][i];
+    drgb[i] = (rgb[1][i] - rgb[0][i]) / steps;
+  }
+
+  unsigned long color = color0;
+
   do {
-    drawPoint((int)x, (int)y, (int)z, colour);
+    drawPoint((int)x, (int)y, (int)z, color);
     if ((int)x != x1)
       x += dx;
     if((int)y != y1)
       y += dy;
+    for (int i = 0; i < 3; i++) {
+      rgb[0][i] += drgb[i];
+    }
+    color = createRGBA((int)rgb[0][0], (int)rgb[0][1], (int)rgb[0][2], 255);
 
     if (((int)x == x1) && ((int)y == y1))
       break;
@@ -269,20 +282,12 @@ unsigned long g3::World::clock_time()
   return (ts.tv_sec * 1000000000) + ts.tv_nsec;
 }
 
-/**
- * This idle callback function is executed as often as possible, 
- * hence it is ideal for processing intensive tasks.
- */
 bool g3::World::on_idle()
 {
-  // finish current frame
   finishFrameTime = clock_time();
-
-  // The amount of time that the frame spent in nanoseconds.
   unsigned long timeSpentInFrame = finishFrameTime - startFrameTime;
 
-  if (timeSpentInFrame <= targetFrameTime)
-  {
+  if (timeSpentInFrame <= targetFrameTime) {
     // sleep
     std::chrono::duration<float, std::nano> wait { targetFrameTime - timeSpentInFrame };
     std::this_thread::sleep_for( wait );
@@ -291,7 +296,7 @@ bool g3::World::on_idle()
     queue_draw();
   } else {
     // Here we were too slow so we will skip the next redrawing.
-    std::cout << "Frame dropping: " << timeSpentInFrame << std::endl;
+    //std::cout << "Frame dropping: " << timeSpentInFrame << std::endl;
   }
 
   // start new frame
@@ -303,181 +308,183 @@ bool g3::World::on_idle()
   // Rotates the cube around the y axis in radians.
   // cube.rotationX += 0.01;
   // cube.rotationY += 0.01;
-  // cube.rotationZ += 0.001;
+  // cube.rotationZ += 0.01;
 
   return true;
 }
 
-#if 0
 #define SWAP(a, b)  { a = a + b; b = a - b; a = a - b; }
 
-void g3::World::handleGourandShaping(int px0, int py0, float pz0, unsigned long colour0,
-                                     int px1, int py1, float pz1, unsigned long colour1,
-                                     int px2, int py2, float pz2, unsigned long colour2)
+void g3::World::handleGourandShaping(int px0, int py0, float pz0, unsigned long color0,
+                                     int px1, int py1, float pz1, unsigned long color1,
+                                     int px2, int py2, float pz2, unsigned long color2)
 {
-  float rbg[3][3];
-  float tv[3][3];       // triangle vertex
-  unsigned long colour[3] = {colour0, colour1, colour2};
-  float start_x, end_x, dsx, dex;
-
-  /*
-   * set the triangle to the shapes like following:
-   * v1 ------ v2                 v0
-   *   \      /     or           /  \
-   *    \    /                  /    \
-   *     \  /                  /      \
-   *      v0                  v1 ---- v2
-   */
-  tv[0][0] = px0 * 1.0;
-  tv[0][1] = py0 * 1.0;
-  tv[0][2] = pz0;
-  tv[1][0] = px1 * 1.0;
-  tv[1][1] = py1 * 1.0;
-  tv[0][2] = pz1;
-  tv[2][0] = px2 * 1.0;
-  tv[2][1] = py2 * 1.0;
-  tv[0][2] = pz2;
-
+  float v[3][3];       // triangle vertex
+  unsigned long color[3] = {color0, color1, color2};
   int v0 = 0, v1 = 1, v2 = 2;
 
-  if (v[v0][1] < v[v1][1]) {
+  float sx0, ex0, dx0;
+  float sx1, ex1, dx1;
+  float sz0, ez0, dz0;
+  float sz1, ez1, dz1;
+  int sy, ey0, ey1;
+
+  float rgb[3][3];
+  float sr0, er0, dr0, sg0, eg0, dg0, sb0, eb0, db0;
+  float sr1, er1, dr1, sg1, eg1, dg1, sb1, eb1, db1;
+
+  v[0][0] = (float)px0;
+  v[0][1] = (float)py0;
+  v[0][2] = pz0;
+  v[1][0] = (float)px1;
+  v[1][1] = (float)py1;
+  v[0][2] = pz1;
+  v[2][0] = (float)px2;
+  v[2][1] = (float)py2;
+  v[0][2] = pz2;
+
+  for (int i = 0; i < 3; i++) {
+    rgb[i][0] = (float)((color[i] >> 24) & 0xff); // red
+    rgb[i][1] = (float)((color[i] >> 16) & 0xff); // blue
+    rgb[i][2] = (float)((color[i] >>  8) & 0xff); // green
+  }
+
+  /* sort by y position */
+  if (v[v0][1] > v[v1][1]) {
     SWAP(v0, v1);
   }
-  if (v[v0][1] < v[v2][1]) {
+  if (v[v0][1] > v[v2][1]) {
     SWAP(v0, v2);
   }
   if (v[v1][0] > v[v2][0]) {
     SWAP(v1, v2);
   }
 
-  for (int i = 0; i < 3; i++) {
-    rgb[i][0] = (color[i] >> 24) & 0xff; // red
-    rgb[i][1] = (color[i] >> 16) & 0xff; // blue
-    rgb[i][2] = (color[i] >>  8) & 0xff; // green
+  if (v[v0][1] == v[v1][1]) {
+    /*
+     *      v2
+     *     /  \
+     *    /    \
+     *   /      \
+     *  v0 ---- v1
+     */
+    sx0 = v[v0][0];
+    sx1 = v[v1][0];
+    ex0 = ex1 = v[v2][0];
+    sy = v[v0][1];
+    ey0 = ey1 = v[v2][1];
+
+    sz0 = v[v0][2];
+    sz1 = v[v1][2];
+    ez0 = ez1 = v[v2][2];
+
+    sr0 = rgb[v0][0];
+    sg0 = rgb[v0][1];
+    sb0 = rgb[v0][2];
+    sr1 = rgb[v1][0];
+    sg1 = rgb[v1][1];
+    sb1 = rgb[v1][2];
+    er0 = er1 = rgb[v2][0];
+    eg0 = eg1 = rgb[v2][1];
+    eb0 = eb1 = rgb[v2][2];
+  } else {
+    /*
+     * v1 ------ v2
+     *   \      /
+     *    \    /
+     *     \  /
+     *      v0
+     */
+    sx0 = sx1 = v[v0][0];
+    ex0 = v[v1][0];
+    ex1 = v[v2][0];
+    sy = v[v0][1];
+    ey0 = v[v1][1];
+    ey1 = v[v2][1];
+
+    sz0 = sz1 = v[v0][2];
+    ez0 = v[v1][2];
+    ez1 = v[v2][2];
+
+    sr0 = sr1 = rgb[v0][0];
+    sg0 = sg1 = rgb[v0][1];
+    sb0 = sb1 = rgb[v0][2];
+    er0 = rgb[v1][0];
+    eg0 = rgb[v1][1];
+    eb0 = rgb[v1][2];
+    er1 = rgb[v2][0];
+    eg1 = rgb[v2][1];
+    eb1 = rgb[v2][2];
   }
-  int tmp_y = std::max(v[v1][1], v[v2][1]);
-  int dy = v[v0][1] - tmp_y;
-  for (int y = v[v0][1]; y > tmp_y; y--) {
-    start_x = end_x = v[v0][0];
-    if (v[v1][0] > v[v2][0]) {
-      dex = (v[v1][0] - v[v0][0]) * 1.0 / dy;
-      dsx = (v[v2][0] - v[v0][0]) * 1.0 / dy;
+  //  else {
+  //   sx0 = sx1 = v[v0][0];
+  //   ex0 = v[v1][0];
+  //   ex1 = v[v2][0];
+  //   sy = v[v0][1];
+  //   ey0 = v[v1][1];   // different with case 2
+  //   ey1 = v[v2][1];
+  //   sz0 = sz1 = v[v0][2];
+  //   ez0 = v[v1][2];
+  //   ez1 = v[v2][2];
+  // }
+
+  int steps0 = ey0 - sy;
+  int steps1 = ey1 - sy;
+  dx0 = (float)(ex0 - sx0) / steps0;
+  dx1 = (float)(ex1 - sx1) / steps1;
+  dz0 = (ez0 - sz0) / steps0;
+  dz1 = (ez1 - sz1) / steps1;
+  float tsx = sx0;
+  float tex = sx1;
+  float tsz = sz0;
+  float tez = sz1;
+
+  dr0 = (er0 - sr0) / steps0;
+  dg0 = (eg0 - sg0) / steps0;
+  db0 = (eb0 - sb0) / steps0;
+  dr1 = (er1 - sr1) / steps1;
+  dg1 = (eg1 - sg1) / steps1;
+  db1 = (eb1 - sb1) / steps1;
+
+  for (int y = sy; y < ey0; y++) {
+    float z = tsz;
+    float tdz;
+    float tdr, tdg, tdb;
+    int r = sr0, g = sg0, b = sb0;
+    int tdx;
+    if (tex > tsx) {
+      tdx = 1;
+      tdz = (tez - tsz) / (tex - tsx);
+      tdr = (sr1 - sr0) / (tex - tsx);
+      tdg = (sg1 - sg0) / (tex - tsx);
+      tdb = (sb1 - sb0) / (tex - tsx);
+    } else if (tex == tsx) {
+      tdx = tdz = tdr = tdg = tdb = 0.0;
     } else {
-      dsx = (v[v1][0] - v[v0][0]) * 1.0 / dy;
-      dex = (v[v2][0] - v[v0][0]) * 1.0 / dy;
+      tdx = -1;
+      tdz = (tez - tsz) / (tsx - tex);
+      tdr = (sr1 - sr0) / (tsx - tex);
+      tdg = (sg1 - sg0) / (tsx - tex);
+      tdb = (sb1 - sb0) / (tsx - tex);
     }
-    for (int x = start_x; x <= end_x; x++) {
-      unsigned long color = createRGBA(0, 0, 128, 255);
-      drawPoint();
+    for (int x = (int)tsx; x != (int)tex; ) {
+      unsigned long color = createRGBA(r,g,b,255);
+      drawPoint(x, y, z, color);
+      x += tdx;
+      z += tdz;
+      r += tdr;
+      g += tdg;
+      b += tdb;
     }
-  }
-
-  if (tmp_y != v[v1][1]) {
-    for ()
-  }
-
-  if (v[0][1] > v[1][1]) {
-    int dy = v[0][1] - v[1][1];
-    int sr = rgb[0][0], sg = rgb[0][1], sb = rgb[0][2];
-    int er = rgb[0][0], eg = rgb[0][1], eb = rgb[0][2];
-
-    double dr1 = (rgb[1][0] - rgb[0][0]) * 1.0 / dy;
-    double db1 = (rgb[1][2] - rgb[0][2]) * 1.0 / dy;
-    double dg1 = (rgb[1][1] - rgb[0][1]) * 1.0 / dy;
-
-    int dr2 = (rgb[2][0] - rgb[0][0]) * 1.0 / dy;
-    int dg2 = (rgb[2][0] - rgb[0][1]) * 1.0 / dy;
-    int db2 = (rgb[2][0] - rgb[0][2]) * 1.0 / dy;
-
-    for (int y = v[1][1]; y < v[0][1]; y++) {
-      int dx1 = (v[1][0] - v[0][0]) * 1.0 / dy;
-      int tx1 = 
-      for (int x = )
-    }
+    tsx += dx0;
+    tex += dx1;
+    tsz += dz0;
+    tez += dz1;
+    sr0 += dr0;
+    sg0 += dg0;
+    sb0 += db0;
+    sr1 += dr1;
+    sg1 += dg1;
+    sb1 += db1;
   }
 }
-
-// void g3::World::handleGourandShaping(int px0, int py0, unsigned long colour0,
-//                                      int px1, int py1, unsigned long colour1,
-//                                      int px2, int py2, unsigned long colour2)
-// {
-//   unsigned int rgb[3][3];
-//   int v[3][2] = {{px0, py0}, {px1, py1}, {px2, py2}};
-//   unsigned long colour[3] = {colour0, colour1, colour2};
-
-//   /*
-//    * set the triangle to the shapes like following:
-//    * v1 ------ v2                 v0
-//    *   \      /     or           /  \
-//    *    \    /                  /    \
-//    *     \  /                  /      \
-//    *      v0                  v1 ----- v2
-//    */
-//   if (v[0][1] == v[1][1]) {
-//     SWAP(v[0][0], v[2][0]);
-//     SWAP(v[0][1], v[2][1]);
-//     SWAP(colour[0], colour[2]);
-//   } else if (v[0][1] == v[2][1]) {
-//     SWAP(v[0][0], v[1][0]);
-//     SWAP(v[0][1], v[1][1]);
-//     SWAP(colour[0], colour[1]);
-//   }
-//   if (v[1][0] > v[2][0]) {
-//     SWAP(v[1][0], v[2][0]);
-//     SWAP(v[1][1], v[2][1]);
-//     SWAP(colour[1], colour[2]);
-//   }
-
-//   for (int i = 0; i < 3; i++) {
-//     rgb[i][0] = (color[i] >> 24) & 0xff; // red
-//     rgb[i][1] = (color[i] >> 16) & 0xff; // blue
-//     rgb[i][2] = (color[i] >>  8) & 0xff; // grenn
-//   }
-
-//   if (v[0][1] > v[1][1]) {
-//     int dy = v[0][1] - v[1][1];
-//     int sr = rgb[0][0], sg = rgb[0][1], sb = rgb[0][2];
-//     int er = rgb[0][0], eg = rgb[0][1], eb = rgb[0][2];
-
-//     double dr1 = (rgb[1][0] - rgb[0][0]) * 1.0 / dy;
-//     double db1 = (rgb[1][2] - rgb[0][2]) * 1.0 / dy;
-//     double dg1 = (rgb[1][1] - rgb[0][1]) * 1.0 / dy;
-
-//     int dr2 = (rgb[2][0] - rgb[0][0]) * 1.0 / dy;
-//     int dg2 = (rgb[2][0] - rgb[0][1]) * 1.0 / dy;
-//     int db2 = (rgb[2][0] - rgb[0][2]) * 1.0 / dy;
-
-//     for (int y = v[1][1]; y < v[0][1]; y++) {
-//       int dx1 = (v[1][0] - v[0][0]) * 1.0 / dy;
-//       int tx1 = 
-//       for (int x = )
-//     }
-//   }
-// }
-
-// void g3::World::drawTriangle(int x0, int y0, unsigned long colour0,
-//                              int x1, int y1, unsigned long colour1,
-//                              int x2, int y2, unsigned long colour2
-// )
-// {
-//   int v[3][2];
-
-//   if (y0 == y1 && y1 == y2)
-//     return;
-
-//   if (y0 < y1) {
-//     SWAP(x0, x1);
-//     SWAP(y0, y1);
-//   }
-//   if (y0 < y2) {
-//     SWAP(x0, x2);
-//     SWAP(y0, y2);
-//   }
-//   if (y1 < y2) {
-//     SWAP(x1, x2);
-//     SWAP(y1, y2);
-//   }
-
-//   if (y0 == y1)
-// }
-#endif

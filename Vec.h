@@ -7,12 +7,10 @@
 #include <cmath>
 #include <iostream>
 
-namespace g3
-{
+namespace g3 {
 
 template<std::size_t N>
-class Vec
-{
+class Vec {
 public:
 
   Vec():mScalars{} {}

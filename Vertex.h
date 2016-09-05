@@ -20,7 +20,6 @@ struct Vector4 {
  * The information we store at the vertex level
  */
 struct Vertex {
-  // Position of the vertex
   Vector3 pos;
 
   Vertex(): pos{0,0,0} {}
@@ -39,9 +38,5 @@ struct Vertex2D {
 	Vertex2D(): pos(0, 0, 0.0) {};
 	Vertex2D(int x, int y, double z): pos{x, y, z} {}
 };
-
-struct Trigle {
-	Vector3 v[3];
-}
 
 #endif

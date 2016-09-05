@@ -11,16 +11,18 @@
 namespace g3 
 {
 
+struct ColorRGBA {
+  int r, g, b, a;
+};
 /**
  * The information we store at the vertex level.
  */
-struct Vertex
-{
+struct Vertex {
   Vec3 pos;
+  ColorRGBA color;
 };
 
-struct Triangle
-{
+struct Triangle {
   unsigned int vertexIndex[3];
 }; // struct Triangle
 
@@ -28,8 +30,7 @@ struct Triangle
 /**
  * Stores an indexed triangle mesh with N vertices and M triangles.
  */
-struct TriangleMesh
-{
+struct TriangleMesh {
   unsigned int nVertices;
   std::unique_ptr<Vertex[]> vertices;
 
