@@ -15,9 +15,6 @@ struct Camera
   Vec3 eye;
   Vec3 target;
 
-  /**
-   * Zoom factor
-   */
   float zoomFactor;
 }; // class Camera
 

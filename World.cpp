@@ -129,9 +129,12 @@ void g3::World::renderWireframe(const g3::Mat4& viewProjMatrix)
     drawLine(mapToWin[0], mapToWin[1], v[0][2], mapToWin[2], mapToWin[3], v[1][2], color[0], color[1]);
     drawLine(mapToWin[2], mapToWin[3], v[1][2], mapToWin[4], mapToWin[5], v[2][2], color[1], color[2]);
     drawLine(mapToWin[4], mapToWin[5], v[2][2], mapToWin[0], mapToWin[1], v[0][2], color[2], color[0]);
-    handleGourandShaping(mapToWin[0], mapToWin[1], v[0][2],  color[0],
-                         mapToWin[2], mapToWin[3], v[1][2],  color[1],
-                         mapToWin[4], mapToWin[5], v[2][2],  color[2]);
+    GourandRender(mapToWin[0], mapToWin[1], v[0][2],  color[0],
+                  mapToWin[2], mapToWin[3], v[1][2],  color[1],
+                  mapToWin[4], mapToWin[5], v[2][2],  color[2]);
+    // GourandRender(mapToWin[0], mapToWin[1], 0.5,  color[0],
+    //               mapToWin[2], mapToWin[3], 0.5,  color[1],
+    //               mapToWin[4], mapToWin[5], 0.5,  color[2]);
   }
 }
 
@@ -182,6 +185,7 @@ void g3::World::renderAxesAndGrid(const g3::Mat4& viewProjMat)
 		int g2X = mapXToWin( g2[0] );
 		int g2Y = mapYToWin( g2[1] );
 		drawLine(g1X, g1Y, g1[2], g2X, g2Y, g2[2], gridColor, gridColor);
+    // drawLine(g1X, g1Y, 1.5, g2X, g2Y, 1.5, gridColor, gridColor);
 	}
 
 }
@@ -196,6 +200,81 @@ inline int g3::World::mapYToWin(float y)
 	return ( -y * camera.zoomFactor ) + (height / 2.0f);
 }
 
+/**
+ * Returns a time point in nanoseconds.
+ *
+ * @return Time point in nanoseconds.
+ */
+unsigned long g3::World::clock_time()
+{
+  timespec ts;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+  return (ts.tv_sec * 1000000000) + ts.tv_nsec;
+}
+
+bool g3::World::on_idle()
+{
+  finishFrameTime = clock_time();
+  unsigned long timeSpentInFrame = finishFrameTime - startFrameTime;
+
+  if (timeSpentInFrame <= targetFrameTime) {
+    // sleep
+    std::chrono::duration<float, std::nano> wait { targetFrameTime - timeSpentInFrame };
+    std::this_thread::sleep_for( wait );
+
+    queue_draw();
+  } else {
+    // Here we were too slow so we will skip the next redrawing.
+    //std::cout << "Frame dropping: " << timeSpentInFrame << std::endl;
+  }
+
+  // start new frame
+  startFrameTime = clock_time();
+
+  // Rotates the cube around the y axis in radians.
+  // cube.rotationX += 0.01;
+  // cube.rotationY += 0.01;
+  // cube.rotationZ += 0.01;
+
+  return true;
+}
+#if 0
+void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long color0, unsigned long color1)
+{
+  // The line visible?
+  if ( (std::min(std::abs(x0), std::abs(x1)) > width) &&
+       (std::min(std::abs(y0), std::abs(y1)) > height) ) {
+    return;
+  }
+   
+
+  int dx = std::abs(x1 - x0);
+  int dy = std::abs(y1 - y0);
+  float dz = std::abs(z1 - z0);
+  int sx = (x0 < x1) ? 1 : -1;
+  int sy = (y0 < y1) ? 1 : -1;
+
+  int err = dx - dy;
+  float gradient = 0;
+
+  int x = x0;
+  int y = y0;
+  int z = z0;
+
+  while (true) {
+    drawPoint(x, y, z, color0);
+
+    if ((x == x1) && (y == y1)) break;
+    int e2 = 2 * err;
+    if (e2 > -dy) { err -= dy; x += sx; }
+    if (e2 < dx) { err += dx; y += sy; }
+
+    // interpolate z depth values
+    gradient = (dx > dy) ?  ((x-x0) / dx) : ((y-y0) / dy);
+    z = z0 + (dz * gradient);
+  }
+}
+#else
 void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long color0, unsigned long color1)
 {
   if ( (std::min(std::abs(x0), std::abs(x1)) > width) &&
@@ -210,19 +289,22 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
 
   float dx = (float)(x1 - x0) / steps;
   float dy = (float)(y1 - y0) / steps;
-  float dz = (z1 - z0) / steps;
+
+  float ddx = (float)(x1 - x0);
+  float ddy = (float)(y1 - y0);
+  float ddz = z1 - z0;
+  float gradient = 0.0;
 
   int rgbi[2][4];
-  float rgb[2][3];
+  float rgb[3];
   float drgb[3];
 
   getRGBA(color0, rgbi[0], rgbi[0] + 1, rgbi[0] + 2, rgbi[0] + 3);
   getRGBA(color1, rgbi[1], rgbi[1] + 1, rgbi[1] + 2, rgbi[1] + 3);
 
   for (int i = 0; i < 3; i++) {
-    rgb[0][i] = (float)rgbi[0][i];
-    rgb[1][i] = (float)rgbi[1][i];
-    drgb[i] = (rgb[1][i] - rgb[0][i]) / steps;
+    rgb[i] = (float)rgbi[0][i];
+    drgb[i] = (float)(rgbi[1][i] - rgbi[0][i]) / steps;
   }
 
   unsigned long color = color0;
@@ -233,16 +315,20 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
       x += dx;
     if((int)y != y1)
       y += dy;
-    for (int i = 0; i < 3; i++) {
-      rgb[0][i] += drgb[i];
-    }
-    color = createRGBA((int)rgb[0][0], (int)rgb[0][1], (int)rgb[0][2], 255);
+
+    rgb[0] += drgb[0];
+    rgb[1] += drgb[1];
+    rgb[2] += drgb[2];
+    color = createRGBA((int)rgb[0], (int)rgb[1], (int)rgb[2], 255);
+
+    gradient = (ddx > ddy) ?  ((x-x0) / ddx) : ((y-y0) / ddy);
+    z = z0 + (ddz * gradient);
 
     if (((int)x == x1) && ((int)y == y1))
       break;
   } while (true);
 }
-
+#endif
 
 /**
  * Draws a point on the screen.
@@ -270,54 +356,10 @@ void g3::World::drawPoint(int x, int y, float z, unsigned long color)
   }
 }
 
-/**
- * Returns a time point in nanoseconds.
- *
- * @return Time point in nanoseconds.
- */
-unsigned long g3::World::clock_time()
-{
-  timespec ts;
-  clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-  return (ts.tv_sec * 1000000000) + ts.tv_nsec;
-}
-
-bool g3::World::on_idle()
-{
-  finishFrameTime = clock_time();
-  unsigned long timeSpentInFrame = finishFrameTime - startFrameTime;
-
-  if (timeSpentInFrame <= targetFrameTime) {
-    // sleep
-    std::chrono::duration<float, std::nano> wait { targetFrameTime - timeSpentInFrame };
-    std::this_thread::sleep_for( wait );
-
-    // redraw only if we were too fast in the prevoius frame.
-    queue_draw();
-  } else {
-    // Here we were too slow so we will skip the next redrawing.
-    //std::cout << "Frame dropping: " << timeSpentInFrame << std::endl;
-  }
-
-  // start new frame
-  startFrameTime = clock_time();
-
-  // Elapsed time calculation between two frames goes here
-  // ...
-
-  // Rotates the cube around the y axis in radians.
-  // cube.rotationX += 0.01;
-  // cube.rotationY += 0.01;
-  // cube.rotationZ += 0.01;
-
-  return true;
-}
-
-#define SWAP(a, b)  { a = a + b; b = a - b; a = a - b; }
-
-void g3::World::handleGourandShaping(int px0, int py0, float pz0, unsigned long color0,
-                                     int px1, int py1, float pz1, unsigned long color1,
-                                     int px2, int py2, float pz2, unsigned long color2)
+#if 0
+void g3::World::GourandRender(int px0, int py0, float pz0, unsigned long color0,
+                              int px1, int py1, float pz1, unsigned long color1,
+                              int px2, int py2, float pz2, unsigned long color2)
 {
   float v[3][3];       // triangle vertex
   unsigned long color[3] = {color0, color1, color2};
@@ -338,10 +380,49 @@ void g3::World::handleGourandShaping(int px0, int py0, float pz0, unsigned long 
   v[0][2] = pz0;
   v[1][0] = (float)px1;
   v[1][1] = (float)py1;
-  v[0][2] = pz1;
+  v[1][2] = pz1;
   v[2][0] = (float)px2;
   v[2][1] = (float)py2;
-  v[0][2] = pz2;
+  v[2][2] = pz2;
+
+  for (int i = 0; i < 3; i++) {
+    rgb[i][0] = (float)((color[i] >> 24) & 0xff); // red
+    rgb[i][1] = (float)((color[i] >> 16) & 0xff); // blue
+    rgb[i][2] = (float)((color[i] >>  8) & 0xff); // green
+  }
+}
+#else
+#define SWAP(a, b)  { a = a + b; b = a - b; a = a - b; }
+
+static int test = 1;
+
+void g3::World::GourandRender(int px0, int py0, float pz0, unsigned long color0,
+                              int px1, int py1, float pz1, unsigned long color1,
+                              int px2, int py2, float pz2, unsigned long color2)
+{
+  float v[3][3];       // triangle vertex
+  unsigned long color[3] = {color0, color1, color2};
+  int v0 = 0, v1 = 1, v2 = 2;
+
+  float sx0, ex0, dx0;
+  float sx1, ex1, dx1;
+  float sz0, ez0, dz0;
+  float sz1, ez1, dz1;
+  int sy, ey0, ey1;
+
+  float rgb[3][3];
+  float sr0, er0, dr0, sg0, eg0, dg0, sb0, eb0, db0;
+  float sr1, er1, dr1, sg1, eg1, dg1, sb1, eb1, db1;
+
+  v[0][0] = (float)px0;
+  v[0][1] = (float)py0;
+  v[0][2] = pz0;
+  v[1][0] = (float)px1;
+  v[1][1] = (float)py1;
+  v[1][2] = pz1;
+  v[2][0] = (float)px2;
+  v[2][1] = (float)py2;
+  v[2][2] = pz2;
 
   for (int i = 0; i < 3; i++) {
     rgb[i][0] = (float)((color[i] >> 24) & 0xff); // red
@@ -406,27 +487,16 @@ void g3::World::handleGourandShaping(int px0, int py0, float pz0, unsigned long 
     ez0 = v[v1][2];
     ez1 = v[v2][2];
 
-    sr0 = sr1 = rgb[v0][0];
-    sg0 = sg1 = rgb[v0][1];
-    sb0 = sb1 = rgb[v0][2];
     er0 = rgb[v1][0];
     eg0 = rgb[v1][1];
     eb0 = rgb[v1][2];
     er1 = rgb[v2][0];
     eg1 = rgb[v2][1];
     eb1 = rgb[v2][2];
+    sr0 = sr1 = rgb[v0][0];
+    sg0 = sg1 = rgb[v0][1];
+    sb0 = sb1 = rgb[v0][2];
   }
-  //  else {
-  //   sx0 = sx1 = v[v0][0];
-  //   ex0 = v[v1][0];
-  //   ex1 = v[v2][0];
-  //   sy = v[v0][1];
-  //   ey0 = v[v1][1];   // different with case 2
-  //   ey1 = v[v2][1];
-  //   sz0 = sz1 = v[v0][2];
-  //   ez0 = v[v1][2];
-  //   ez1 = v[v2][2];
-  // }
 
   int steps0 = ey0 - sy;
   int steps1 = ey1 - sy;
@@ -434,10 +504,6 @@ void g3::World::handleGourandShaping(int px0, int py0, float pz0, unsigned long 
   dx1 = (float)(ex1 - sx1) / steps1;
   dz0 = (ez0 - sz0) / steps0;
   dz1 = (ez1 - sz1) / steps1;
-  float tsx = sx0;
-  float tex = sx1;
-  float tsz = sz0;
-  float tez = sz1;
 
   dr0 = (er0 - sr0) / steps0;
   dg0 = (eg0 - sg0) / steps0;
@@ -447,27 +513,24 @@ void g3::World::handleGourandShaping(int px0, int py0, float pz0, unsigned long 
   db1 = (eb1 - sb1) / steps1;
 
   for (int y = sy; y < ey0; y++) {
-    float z = tsz;
+    float z = sz0;
     float tdz;
+    int   tdx;
     float tdr, tdg, tdb;
-    int r = sr0, g = sg0, b = sb0;
-    int tdx;
-    if (tex > tsx) {
-      tdx = 1;
-      tdz = (tez - tsz) / (tex - tsx);
-      tdr = (sr1 - sr0) / (tex - tsx);
-      tdg = (sg1 - sg0) / (tex - tsx);
-      tdb = (sb1 - sb0) / (tex - tsx);
-    } else if (tex == tsx) {
+    int   r = sr0, g = sg0, b = sb0;
+    int   steps = std::abs(sx1 - sx0);
+
+    if (steps == 0) {
       tdx = tdz = tdr = tdg = tdb = 0.0;
     } else {
-      tdx = -1;
-      tdz = (tez - tsz) / (tsx - tex);
-      tdr = (sr1 - sr0) / (tsx - tex);
-      tdg = (sg1 - sg0) / (tsx - tex);
-      tdb = (sb1 - sb0) / (tsx - tex);
+      tdz = (sz1 - sz0) / steps;
+      tdr = (sr1 - sr0) / steps;
+      tdg = (sg1 - sg0) / steps;
+      tdb = (sb1 - sb0) / steps;
+      tdx = (sx1 > sx0) ? 1 : -1;
     }
-    for (int x = (int)tsx; x != (int)tex; ) {
+
+    for (int x = (int)sx0; x != (int)sx1; ) {
       unsigned long color = createRGBA(r,g,b,255);
       drawPoint(x, y, z, color);
       x += tdx;
@@ -475,16 +538,23 @@ void g3::World::handleGourandShaping(int px0, int py0, float pz0, unsigned long 
       r += tdr;
       g += tdg;
       b += tdb;
+      // if (test == 100) {
+      //   std::cout << z << ',' << std::hex << color << "; ";
+      // }
     }
-    tsx += dx0;
-    tex += dx1;
-    tsz += dz0;
-    tez += dz1;
+
+    sx0 += dx0;
+    sx1 += dx1;
+    sz0 += dz0;
+    sz1 += dz1;
     sr0 += dr0;
     sg0 += dg0;
     sb0 += db0;
     sr1 += dr1;
     sg1 += dg1;
     sb1 += db1;
-  }
+
+    test ++;
+  } // end for (int y = sy; y < ey0; y++)
 }
+#endif

@@ -35,9 +35,9 @@ class World: public Gtk::DrawingArea {
 
   void drawPoint(int x, int y, float z, unsigned long color);
   void drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long colour0, unsigned long colour1);
-  void handleGourandShaping(int px0, int py0, float pz0, unsigned long color0,
-                                     int px1, int py1, float pz1, unsigned long color1,
-                                     int px2, int py2, float pz2, unsigned long color2);
+  void GourandRender(int px0, int py0, float pz0, unsigned long color0,
+                     int px1, int py1, float pz1, unsigned long color1,
+                     int px2, int py2, float pz2, unsigned long color2);
 
   unsigned long clock_time();
 

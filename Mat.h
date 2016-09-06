@@ -8,8 +8,7 @@
 #include "Vec.h"
 #include <iostream>
 
-namespace g3
-{
+namespace g3 {
 
 /**
  * Represents a NxN square matrix.
@@ -75,9 +74,6 @@ class Mat
     return res;
   }
 
-	/**
-	 * Scalar multiplication operator overloading
-	 */
   Mat<N> operator*(const float scalar) const
   {
     Mat<N> res;
