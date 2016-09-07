@@ -408,10 +408,20 @@ void g3::World::GourandRender(int px0, int py0, float pz0, unsigned long color0,
   if (v[v0][1] > v[v2][1]) {
     SWAP(v0, v2);
   }
-  if (v[v1][0] > v[v2][0]) {
+  if (v[v1][1] > v[v2][1]) {
     SWAP(v1, v2);
   }
 
+#if 0
+  static int debug = 1;
+
+  if (debug == 5) {
+    std::cout << v[v0][0] << ' ' << v[v0][1] << ' ' << v[v0][2] << ' ' << std::endl;
+    std::cout << v[v1][0] << ' ' << v[v1][1] << ' ' << v[v1][2] << ' ' << std::endl;
+    std::cout << v[v2][0] << ' ' << v[v2][1] << ' ' << v[v2][2] << ' ' << std::endl;
+  }
+  debug++;
+#endif
   if (v[v0][1] == v[v1][1]) {
     /*
      *      v2
@@ -506,6 +516,6 @@ void g3::World::GourandRender(int px0, int py0, float pz0, unsigned long color0,
   } // end for (int y = sy; y < ey0; y++)
 
   if (ey0 != ey1) {
-    GourandRender(x0, ey0, z0, c0, x1, ey0, z1, c1, ex1, ey1, ez1, color2);
+    GourandRender(x0, ey0, z0, c0, x1, ey0, z1, c1, ex1, ey1, ez1, color[v2]);
   }
 }
