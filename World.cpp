@@ -25,7 +25,7 @@ camera { Vec3{15, 15, 15}, Vec3{-1, -1, -1}, 1280 }//camera { Vec3{17, 10, -20},
   g3::loadCube(cube);
 
   // enable mouse wheel detection
-  add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK | Gdk::GDK_KEY_PRESS_MASK);
+  add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK | Gdk::KEY_PRESS_MASK);
 
   // register idle function
   Glib::signal_idle().connect(sigc::mem_fun(*this, &World::on_idle));
@@ -74,11 +74,21 @@ bool g3::World::on_scroll_event(GdkEventScroll* event)
   return true;
 }
 
-virtual bool on_press_button(GdkEventButton* event)
-{
+// bool g3::World::on_press_button(GdkEventButton* event)
+// {
+//   std::cout << "button press" << std::endl;
+//   return true;
+// }
 
+bool g3::World::on_key_press_or_release_event(GdkEventKey* key_event)
+{
+  // std::cout << "button press" << std::endl;
+  float zoomFactorPercent = 0.05;
+
+  camera.zoomFactor -= camera.zoomFactor * zoomFactorPercent;
   return true;
 }
+
 /**
  * The drawing function, called by the GUI.
  */
