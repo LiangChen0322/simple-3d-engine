@@ -8,12 +8,12 @@
 #include "Quaternion.h"
 #include <memory>
 
-namespace g3 
-{
+namespace g3 {
 
 struct ColorRGBA {
   int r, g, b, a;
 };
+
 /**
  * The information we store at the vertex level.
  */
@@ -25,7 +25,6 @@ struct Vertex {
 struct Triangle {
   unsigned int vertexIndex[3];
 }; // struct Triangle
-
 
 /**
  * Stores an indexed triangle mesh with N vertices and M triangles.
@@ -44,7 +43,6 @@ struct TriangleMesh {
 
 void loadCube(TriangleMesh& mesh);
 Mat4 getWorldMatrix(TriangleMesh& mesh);
-
 
 } // namespace g3
 

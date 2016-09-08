@@ -21,6 +21,7 @@ class World: public Gtk::DrawingArea {
 
   virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
   virtual bool on_scroll_event(GdkEventScroll* event);
+  virtual bool on_press_button(GdkEventButton* event);
 
   private:
 

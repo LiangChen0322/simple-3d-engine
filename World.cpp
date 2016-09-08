@@ -25,7 +25,7 @@ camera { Vec3{15, 15, 15}, Vec3{-1, -1, -1}, 1280 }//camera { Vec3{17, 10, -20},
   g3::loadCube(cube);
 
   // enable mouse wheel detection
-  add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK);
+  add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK | Gdk::GDK_KEY_PRESS_MASK);
 
   // register idle function
   Glib::signal_idle().connect(sigc::mem_fun(*this, &World::on_idle));
@@ -74,6 +74,11 @@ bool g3::World::on_scroll_event(GdkEventScroll* event)
   return true;
 }
 
+virtual bool on_press_button(GdkEventButton* event)
+{
+
+  return true;
+}
 /**
  * The drawing function, called by the GUI.
  */
@@ -134,6 +139,18 @@ void g3::World::renderWireframe(const g3::Mat4& viewProjMatrix)
     GourandRender(mapToWin[0], mapToWin[1], v[0][2],  color[0],
                   mapToWin[2], mapToWin[3], v[1][2],  color[1],
                   mapToWin[4], mapToWin[5], v[2][2],  color[2]);
+#if 0
+    static int debug = 0;
+
+    if (debug == 0) {
+      std::cout << "x:" << mapToWin[0] << ", y:" << mapToWin[1] << ", z:" << v[0][2] << ' '
+                << "x:" << mapToWin[2] << ", y:" << mapToWin[3] << ", z:" << v[1][2] << ' '
+                << "x:" << mapToWin[4] << ", y:" << mapToWin[5] << ", z:" << v[2][2] << std::endl;
+    }
+    if (i == cube.nFaces - 1) {
+      debug++;
+    }
+#endif
   }
 }
 
@@ -263,6 +280,7 @@ void g3::World::drawPoint(int x, int y, float z, unsigned long color)
   }
 }
 
+static int flag = 0;
 #if 1
 void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long color0, unsigned long color1)
 {
@@ -271,10 +289,9 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
        (std::min(std::abs(y0), std::abs(y1)) > height) ) {
     return;
   }
-   
 
-  int dx = std::abs(x1 - x0);
-  int dy = std::abs(y1 - y0);
+  float dx = std::abs(x1 - x0);
+  float dy = std::abs(y1 - y0);
   float dz = std::abs(z1 - z0);
   int sx = (x0 < x1) ? 1 : -1;
   int sy = (y0 < y1) ? 1 : -1;
@@ -284,7 +301,7 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
 
   int x = x0;
   int y = y0;
-  int z = z0;
+  float z = z0;
 
   int steps = (dx > dy) ? dx : dy;
   float r0 = (float)((color0 >> 24) & 0xff); // red
@@ -298,6 +315,10 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
 
   while (true) {
     drawPoint(x, y, z, color);
+    if (x == 445 && y == 299 && flag == 1) {
+      std::cout << "z: " << z << std::endl;
+      flag = 0;
+    }
 
     if ((x == x1) && (y == y1)) break;
     int e2 = 2 * err;
@@ -471,12 +492,12 @@ void g3::World::GourandRender(int px0, int py0, float pz0, unsigned long color0,
     sb0 = sb1 = rgb[v0][2];
   }
 
-  float ddx0 = ex0 - sx0;
-  int   ddy0 = ey0 - sy;
-  float ddz0 = ez0 - sz0;
-  float ddx1 = ex1 - sx1;
-  int   ddy1 = ey1 - sy;
-  float ddz1 = ez1 - sz1;
+  float ddx0 = std::abs(ex0 - sx0);
+  float ddy0 = std::abs(ey0 - sy);
+  float ddz0 = std::abs(ez0 - sz0);
+  float ddx1 = std::abs(ex1 - sx1);
+  float ddy1 = std::abs(ey1 - sy);
+  float ddz1 = std::abs(ez1 - sz1);
   float gradient0, gradient1;
 
   int steps0 = ey0 - sy;
@@ -496,6 +517,19 @@ void g3::World::GourandRender(int px0, int py0, float pz0, unsigned long color0,
   x1 = sx1;
   z0 = sz0;
   z1 = sz1;
+
+#if 1
+    static int debug = 0;
+
+    if (debug < 6) {
+      std::cout <<"sx0:"<< sx0 <<", sy:"<< sy << ", sz0:" << sz0 <<", ex0:"<< ex0 <<", ey0:"<< ey0 << ", ez0:" << ez0
+                << std::endl
+                <<"sx1:"<< sx1 <<", sy:"<< sy << ", sz1:" << sz1 <<", ex1:"<< ex1 <<", ey1:"<< ey1 << ", ez1:" << ez1
+                << std::endl << std::endl;
+    flag = 1;
+    }
+    debug++;
+#endif
 
   unsigned long c0, c1;
   for (int y = sy; y < ey0; y++) {

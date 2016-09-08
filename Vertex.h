@@ -27,16 +27,16 @@ struct Vertex {
 };
 
 struct PointOnScreen {
-	int x, int y;
-	float z;
+  int x, int y;
+  float z;
 };
 
-struct Vertex2D {
-	PointOnScreen pos;
-	unsigned long colour;
+// struct Vertex2D {
+//   PointOnScreen pos;
+//   unsigned long colour;
 
-	Vertex2D(): pos(0, 0, 0.0) {};
-	Vertex2D(int x, int y, double z): pos{x, y, z} {}
-};
+//   Vertex2D(): pos(0, 0, 0.0) {};
+//   Vertex2D(int x, int y, double z): pos{x, y, z} {}
+// };
 
 #endif
