@@ -57,7 +57,7 @@ void g3::loadCube(g3::TriangleMesh& mesh)
   mesh.vertices.reset(new Vertex[mesh.nVertices]);
 
   // mesh.nFaces = 120;
-  mesh.nFaces = 60;
+  mesh.nFaces = 120;
   mesh.faces.reset(new Triangle[mesh.nFaces]);
 
   mesh.rotationX = 0.0;
@@ -91,11 +91,8 @@ void g3::loadCube(g3::TriangleMesh& mesh)
       mesh.faces[i].vertexIndex[2] = i + 2;
     }
   }
-  // for (int i = 0; i < 13; i++) {
-  //   printf("%1.6lf, %1.6lf, %1.6lf\n", mesh.vertices[i].pos[0], mesh.vertices[i].pos[1],
-  //          mesh.vertices[i].pos[2]);
-  // }
-  for (int i = 1; i < 3; i++) {
+
+  for (int i = 1; i < 5; i++) {
     int t = 12 + (i - 1) * 24;
     for (int j = 0; j < 11; j++) {
       mesh.faces[t].vertexIndex[0] = (i - 1) * 12 + j + 1;
@@ -118,9 +115,14 @@ void g3::loadCube(g3::TriangleMesh& mesh)
     mesh.faces[t].vertexIndex[2] = (i - 1) * 12 + 1;
   }
 
-  // for (int i = 1; i < 3; i++) {
-  //   for (int j = 0; j < 6; j++)
-  // }
+  for (int i = 107, j = 47; i < 119; i++, j++) {
+    mesh.faces[i].vertexIndex[0] = j + 1;
+    mesh.faces[i].vertexIndex[1] = j + 2;
+    mesh.faces[i].vertexIndex[2] = 61;
+  }
+  mesh.faces[119].vertexIndex[0] = 60;
+  mesh.faces[119].vertexIndex[1] = 49;
+  mesh.faces[119].vertexIndex[2] = 61;
 }
 #endif
 
