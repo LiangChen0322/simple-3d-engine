@@ -9,12 +9,16 @@
 #include <memory>
 #include <limits>
 
+static int flag = 0;
+static int tcount = 0;
+static int linePr = 0;
+
 g3::World::World(unsigned int w, unsigned int h):
-width {w},
-height {h},
-frontBuffer {Gdk::Pixbuf::create(Gdk::Colorspace::COLORSPACE_RGB, true, 8, width, height)},
-targetFrameTime {33300000},
-camera { Vec3{15, 15, 15}, Vec3{-1, -1, -1}, 1280 }//camera { Vec3{17, 10, -20}, Vec3{1, 0, 2}, 1280 }
+  width {w},
+  height {h},
+  frontBuffer {Gdk::Pixbuf::create(Gdk::Colorspace::COLORSPACE_RGB, true, 8, width, height)},
+  targetFrameTime {33300000},
+  camera { Vec3{15, 15, 15}, Vec3{-1, -1, -1}, 1280 }//camera { Vec3{17, 10, -20}, Vec3{1, 0, 2}, 1280 }
 {
   // initializes the depth buffer.
   depthBuffer.reset(new float[width * height]);
@@ -145,22 +149,12 @@ void g3::World::renderWireframe(const g3::Mat4& viewProjMatrix)
 
     drawLine(mapToWin[0], mapToWin[1], v[0][2], mapToWin[2], mapToWin[3], v[1][2], black, black);
     drawLine(mapToWin[2], mapToWin[3], v[1][2], mapToWin[4], mapToWin[5], v[2][2], black, black);
-    drawLine(mapToWin[4], mapToWin[5], v[2][2], mapToWin[0], mapToWin[1], v[0][2], black, black);
-    GourandRender(mapToWin[0], mapToWin[1], v[0][2],  color[0],
-                  mapToWin[2], mapToWin[3], v[1][2],  color[1],
-                  mapToWin[4], mapToWin[5], v[2][2],  color[2]);
-#if 0
-    static int debug = 0;
+    drawLine(mapToWin[4], mapToWin[5], v[2][2], mapToWin[0], mapToWin[1], v[0][2], 
+      black, black);
 
-    if (debug == 0) {
-      std::cout << "x:" << mapToWin[0] << ", y:" << mapToWin[1] << ", z:" << v[0][2] << ' '
-                << "x:" << mapToWin[2] << ", y:" << mapToWin[3] << ", z:" << v[1][2] << ' '
-                << "x:" << mapToWin[4] << ", y:" << mapToWin[5] << ", z:" << v[2][2] << std::endl;
-    }
-    if (i == cube.nFaces - 1) {
-      debug++;
-    }
-#endif
+    // GourandRender(mapToWin[0], mapToWin[1], v[0][2],  color[0],
+    //               mapToWin[2], mapToWin[3], v[1][2],  color[1],
+    //               mapToWin[4], mapToWin[5], v[2][2],  color[2]);
   }
 }
 
@@ -290,7 +284,6 @@ void g3::World::drawPoint(int x, int y, float z, unsigned long color)
   }
 }
 
-static int flag = 0;
 #if 1
 void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, unsigned long color0, unsigned long color1)
 {
@@ -443,16 +436,6 @@ void g3::World::GourandRender(int px0, int py0, float pz0, unsigned long color0,
     SWAP(v1, v2);
   }
 
-#if 0
-  static int debug = 1;
-
-  if (debug == 5) {
-    std::cout << v[v0][0] << ' ' << v[v0][1] << ' ' << v[v0][2] << ' ' << std::endl;
-    std::cout << v[v1][0] << ' ' << v[v1][1] << ' ' << v[v1][2] << ' ' << std::endl;
-    std::cout << v[v2][0] << ' ' << v[v2][1] << ' ' << v[v2][2] << ' ' << std::endl;
-  }
-  debug++;
-#endif
   if (v[v0][1] == v[v1][1]) {
     /*
      *      v2
@@ -528,7 +511,7 @@ void g3::World::GourandRender(int px0, int py0, float pz0, unsigned long color0,
   z0 = sz0;
   z1 = sz1;
 
-#if 1
+#if 0
     static int debug = 0;
 
     if (debug < 6) {

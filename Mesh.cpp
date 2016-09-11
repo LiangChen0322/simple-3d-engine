@@ -8,6 +8,7 @@
 /**
  * Loads a cube triangle mesh.
  */
+#if 0
 void g3::loadCube(g3::TriangleMesh& mesh)
 {
   FILE *pf;
@@ -44,6 +45,84 @@ void g3::loadCube(g3::TriangleMesh& mesh)
   mesh.loc = {loc[0], loc[1], loc[2]};
   fclose(pf);
 }
+#else
+void g3::loadCube(g3::TriangleMesh& mesh)
+{
+  double r;
+  float x, y, z;
+
+  mesh.R = 2;
+  mesh.nVertices = 62;
+  // mesh.nVertices = 13;
+  mesh.vertices.reset(new Vertex[mesh.nVertices]);
+
+  // mesh.nFaces = 120;
+  mesh.nFaces = 60;
+  mesh.faces.reset(new Triangle[mesh.nFaces]);
+
+  mesh.rotationX = 0.0;
+  mesh.rotationY = 0.0;
+  mesh.rotationZ = 0.0;
+
+  mesh.vertices[0].pos = {0, 4, 0};
+  mesh.vertices[0].color = {0, 255, 0, 255};
+  mesh.vertices[61].pos = {0, 0, 0};
+  mesh.vertices[61].color = {0, 255, 0, 255};
+
+  for (int i = 1; i < 6; i++) {
+    int t = (i - 1) * 12 + 1;
+
+    y = 2 + 2 * std::cos(i * 30 * PI);
+    r = 2 * std::sin(i * 30 * PI);
+    for (int j = 0; j < 12; j++) {
+      x = r * std::sin(j * 30 * PI);
+      z = r * std::cos(j * 30 * PI);
+      mesh.vertices[t + j].pos = {x, y, z};
+      mesh.vertices[t + j].color = {0, 255, 0, 255};
+    }
+  }
+
+  for (int i = 0; i < 12; i++) {
+    mesh.faces[i].vertexIndex[0] = 0;
+    mesh.faces[i].vertexIndex[1] = i + 1;
+    if (i == 11) {
+      mesh.faces[i].vertexIndex[2] = 1;
+    } else {
+      mesh.faces[i].vertexIndex[2] = i + 2;
+    }
+  }
+  // for (int i = 0; i < 13; i++) {
+  //   printf("%1.6lf, %1.6lf, %1.6lf\n", mesh.vertices[i].pos[0], mesh.vertices[i].pos[1],
+  //          mesh.vertices[i].pos[2]);
+  // }
+  for (int i = 1; i < 3; i++) {
+    int t = 12 + (i - 1) * 24;
+    for (int j = 0; j < 11; j++) {
+      mesh.faces[t].vertexIndex[0] = (i - 1) * 12 + j + 1;
+      mesh.faces[t].vertexIndex[1] = (i - 1) * 12 + j + 2;
+      mesh.faces[t].vertexIndex[2] = i * 12 + j + 1;
+      t++;
+
+      mesh.faces[t].vertexIndex[0] = i * 12 + j + 1;
+      mesh.faces[t].vertexIndex[1] = i * 12 + j + 2;
+      mesh.faces[t].vertexIndex[2] = (i - 1) * 12 + j + 2;
+      t++;
+    }
+    mesh.faces[t].vertexIndex[0] = (i - 1) * 12 + 12;
+    mesh.faces[t].vertexIndex[1] = (i - 1) * 12 + 1;
+    mesh.faces[t].vertexIndex[2] = i * 12 + 12;
+    t++;
+
+    mesh.faces[t].vertexIndex[0] = i * 12 + 12;
+    mesh.faces[t].vertexIndex[1] = i * 12 + 1;
+    mesh.faces[t].vertexIndex[2] = (i - 1) * 12 + 1;
+  }
+
+  // for (int i = 1; i < 3; i++) {
+  //   for (int j = 0; j < 6; j++)
+  // }
+}
+#endif
 
 /**
  * Calculates the world transformation matrix of the triangle mesh object.

@@ -16,6 +16,10 @@ struct Vector4 {
   double x, y, z, w;
 };
 
+struct Point3d {
+  double x, y, z;
+};
+
 /*
  * The information we store at the vertex level
  */
