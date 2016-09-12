@@ -18,7 +18,7 @@ g3::World::World(unsigned int w, unsigned int h):
   height {h},
   frontBuffer {Gdk::Pixbuf::create(Gdk::Colorspace::COLORSPACE_RGB, true, 8, width, height)},
   targetFrameTime {33300000},
-  camera { Vec3{15, 15, 15}, Vec3{-1, -1, -1}, 1280 }//camera { Vec3{17, 10, -20}, Vec3{1, 0, 2}, 1280 }
+  camera { Vec3{20, 25, 0}, Vec3{-20, -23, 0}, 1280, 0}//camera { Vec3{17, 10, -20}, Vec3{1, 0, 2}, 1280 }
 {
   // initializes the depth buffer.
   depthBuffer.reset(new float[width * height]);
@@ -69,12 +69,21 @@ bool g3::World::on_scroll_event(GdkEventScroll* event)
 {
   float zoomFactorPercent = 0.05;
 
-  if (event->direction == GdkScrollDirection::GDK_SCROLL_UP) {
-    camera.zoomFactor += camera.zoomFactor * zoomFactorPercent;
-  } else {
-    camera.zoomFactor -= camera.zoomFactor * zoomFactorPercent;
-  }
+  // if (event->direction == GdkScrollDirection::GDK_SCROLL_UP) {
+  //   camera.zoomFactor += camera.zoomFactor * zoomFactorPercent;
+  // } else {
+  //   camera.zoomFactor -= camera.zoomFactor * zoomFactorPercent;
+  // }
 
+  if (event->direction == GdkScrollDirection::GDK_SCROLL_UP) {
+    camera.ratio += 2;
+  } else {
+    camera.ratio -= 2;
+  }
+  camera.eye[0] = 20 * std::cos(camera.ratio * PI);
+  camera.eye[2] = 20 * std::sin(camera.ratio * PI);
+  // camera.target = {0 - camera.eye[0], 4 - camera.eye[1], 0 - camera.eye[2]};
+  camera.target = cube.center - camera.eye;
   return true;
 }
 
@@ -131,31 +140,41 @@ void g3::World::renderWireframe(const g3::Mat4& viewProjMatrix)
   Mat4 transformMatrix = g3::getWorldMatrix(cube) * viewProjMatrix;
 
   for (unsigned int i = 0; i < cube.nFaces; i++) {
-    Vec3 v[3];
-    int mapToWin[6];
-    unsigned long color[3];
+    float ans = dotProduct( cube.vertices[ cube.faces[i].vertexIndex[0] ].pos - camera.eye, cube.faces[i].normal);
 
-    for (unsigned int j = 0; j < 3; j++) {
-      v[j] = transformP3( cube.vertices[ cube.faces[i].vertexIndex[j] ].pos, transformMatrix );
+    // if (ans == 0 && flag == 0) {
+    //   std::cout << "i:" << i << "  " << cube.vertices[ cube.faces[i].vertexIndex[0] ].pos - camera.eye << "   :   "
+    //             << cube.faces[i].normal << std::endl;
+    // }
 
-      mapToWin[2*j]   = mapXToWin( v[j][0] );
-      mapToWin[2*j+1] = mapYToWin( v[j][1] );
+    if (ans <= 0.0) {
+      Vec3 v[3];
+      int mapToWin[6];
+      unsigned long color[3];
 
-      ColorRGBA tc = cube.vertices[ cube.faces[i].vertexIndex[j] ].color;
-      color[j] = createRGBA(tc.r, tc.g, tc.b, tc.a);
+      for (unsigned int j = 0; j < 3; j++) {
+        v[j] = transformP3( cube.vertices[ cube.faces[i].vertexIndex[j] ].pos, transformMatrix );
+
+        mapToWin[2*j]   = mapXToWin( v[j][0] );
+        mapToWin[2*j+1] = mapYToWin( v[j][1] );
+
+        ColorRGBA tc = cube.vertices[ cube.faces[i].vertexIndex[j] ].color;
+        color[j] = createRGBA(tc.r, tc.g, tc.b, tc.a);
+      }
+
+      unsigned long black = createRGBA(0,0,0,255);
+
+      drawLine(mapToWin[0], mapToWin[1], v[0][2], mapToWin[2], mapToWin[3], v[1][2], black, black);
+      drawLine(mapToWin[2], mapToWin[3], v[1][2], mapToWin[4], mapToWin[5], v[2][2], black, black);
+      drawLine(mapToWin[4], mapToWin[5], v[2][2], mapToWin[0], mapToWin[1], v[0][2], 
+        black, black);
+
+      GourandRender(mapToWin[0], mapToWin[1], v[0][2],  color[0],
+                    mapToWin[2], mapToWin[3], v[1][2],  color[1],
+                    mapToWin[4], mapToWin[5], v[2][2],  color[2]);
     }
-
-    unsigned long black = createRGBA(0,0,0,255);
-
-    drawLine(mapToWin[0], mapToWin[1], v[0][2], mapToWin[2], mapToWin[3], v[1][2], black, black);
-    drawLine(mapToWin[2], mapToWin[3], v[1][2], mapToWin[4], mapToWin[5], v[2][2], black, black);
-    drawLine(mapToWin[4], mapToWin[5], v[2][2], mapToWin[0], mapToWin[1], v[0][2], 
-      black, black);
-
-    // GourandRender(mapToWin[0], mapToWin[1], v[0][2],  color[0],
-    //               mapToWin[2], mapToWin[3], v[1][2],  color[1],
-    //               mapToWin[4], mapToWin[5], v[2][2],  color[2]);
   }
+  // flag = 1;
 }
 
 void g3::World::renderAxesAndGrid(const g3::Mat4& viewProjMat)
@@ -318,10 +337,6 @@ void g3::World::drawLine(int x0, int y0, float z0, int x1, int y1, float z1, uns
 
   while (true) {
     drawPoint(x, y, z, color);
-    if (x == 445 && y == 299 && flag == 1) {
-      std::cout << "z: " << z << std::endl;
-      flag = 0;
-    }
 
     if ((x == x1) && (y == y1)) break;
     int e2 = 2 * err;

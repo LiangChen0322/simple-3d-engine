@@ -10,12 +10,12 @@ namespace g3
 /*******************************************************************************
  * Describes a camera object.
  ******************************************************************************/
-struct Camera
-{
+struct Camera {
   Vec3 eye;
   Vec3 target;
 
   float zoomFactor;
+  int   ratio;
 }; // class Camera
 
 } // namespace g3

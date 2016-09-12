@@ -11,5 +11,6 @@ g3::Vec3 g3::crossProduct(const g3::Vec3& lhs, const g3::Vec3& rhs)
     (lhs[2] * rhs[0]) - (lhs[0] * rhs[2]),
     (lhs[0] * rhs[1]) - (lhs[1] * rhs[0])
   };
+  // std::cout << "test" << res << std::endl;
   return res;
 }

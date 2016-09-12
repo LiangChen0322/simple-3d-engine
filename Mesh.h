@@ -62,6 +62,7 @@ struct TriangleMesh {
 
 void loadCube(TriangleMesh& mesh);
 Mat4 getWorldMatrix(TriangleMesh& mesh);
+void getNormalVector(TriangleMesh& mesh, unsigned int fnum);
 
 } // namespace g3
 
