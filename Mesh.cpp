@@ -7,7 +7,6 @@
 
 void g3::getNormalVector(g3::TriangleMesh& mesh, unsigned int fnum)
 {
-  // float a, b, c;
   Vec3 p1, p2, p3;
   Vec3 check;
 
@@ -22,7 +21,6 @@ void g3::getNormalVector(g3::TriangleMesh& mesh, unsigned int fnum)
   } else {
     mesh.faces[fnum].normal = p3;
   }
-
   // std::cout << "i:" << fnum << "   " << mesh.faces[fnum].normal << std::endl;
 }
 
@@ -71,16 +69,17 @@ void g3::loadCube(g3::TriangleMesh& mesh)
 {
   float tR, r;
   float x, y, z;
+  int uratio = 10;
+  int N = 180 / uratio;
+  int M = 360 / uratio;
 
   mesh.loc = {0, 0, 0};
   mesh.R = tR = 2;
   mesh.center = {0, tR, 0};
-  mesh.nVertices = 62;
-  // mesh.nVertices = 13;
+  mesh.nVertices = 2 + M * (N -1);
   mesh.vertices.reset(new Vertex[mesh.nVertices]);
 
-  mesh.nFaces = 120;
-  // mesh.nFaces = 108;
+  mesh.nFaces = M * (2 + (N - 2) * 2);
   mesh.faces.reset(new Triangle[mesh.nFaces]);
 
   mesh.rotationX = 0.0;
@@ -89,64 +88,67 @@ void g3::loadCube(g3::TriangleMesh& mesh)
 
   mesh.vertices[0].pos = {0, tR * 2, 0};
   mesh.vertices[0].color = {0, 0, 255, 255};
-  mesh.vertices[61].pos = {0, 0, 0};
-  mesh.vertices[61].color = {0, 0, 255, 255};
+  mesh.vertices[mesh.nVertices - 1].pos = {0, 0, 0};
+  mesh.vertices[mesh.nVertices - 1].color = {0, 0, 255, 255};
 
-  for (int i = 1; i < 6; i++) {
-    int t = (i - 1) * 12 + 1;
+  /* set vertices position */
+  for (int i = 1; i < N; i++) {
+    int t = (i - 1) * M + 1;
 
-    y = tR + tR * std::cos(i * 30 * PI);
-    r = tR * std::sin(i * 30 * PI);
-    for (int j = 0; j < 12; j++) {
-      x = r * std::sin(j * 30 * PI);
-      z = r * std::cos(j * 30 * PI);
+    y = tR + tR * std::cos(i * uratio * PI);
+    r = tR * std::sin(i * uratio * PI);
+    for (int j = 0; j < M; j++) {
+      x = r * std::sin(j * uratio * PI);
+      z = r * std::cos(j * uratio * PI);
       mesh.vertices[t + j].pos = {x, y, z};
       mesh.vertices[t + j].color = {0, 0, 255, 255};
     }
   }
 
-  for (int i = 0; i < 12; i++) {
+  /* first level faces */
+  for (int i = 0; i < M; i++) {
     mesh.faces[i].vertexIndex[0] = 0;
     mesh.faces[i].vertexIndex[1] = i + 1;
-    if (i == 11) {
+    if (i == M - 1) {
       mesh.faces[i].vertexIndex[2] = 1;
     } else {
       mesh.faces[i].vertexIndex[2] = i + 2;
     }
   }
 
-  for (int i = 1; i < 5; i++) {
-    int t = 12 + (i - 1) * 24;
-    for (int j = 0; j < 11; j++) {
-      mesh.faces[t].vertexIndex[0] = (i - 1) * 12 + j + 1;
-      mesh.faces[t].vertexIndex[1] = (i - 1) * 12 + j + 2;
-      mesh.faces[t].vertexIndex[2] = i * 12 + j + 1;
+  for (int i = 1; i < N - 1; i++) {
+    int t = M + (i - 1) * M * 2;
+    for (int j = 0; j < M - 1; j++) {
+      mesh.faces[t].vertexIndex[0] = (i - 1) * M + j + 1;
+      mesh.faces[t].vertexIndex[1] = (i - 1) * M + j + 2;
+      mesh.faces[t].vertexIndex[2] = i * M + j + 1;
       t++;
 
-      mesh.faces[t].vertexIndex[0] = i * 12 + j + 1;
-      mesh.faces[t].vertexIndex[1] = i * 12 + j + 2;
-      mesh.faces[t].vertexIndex[2] = (i - 1) * 12 + j + 2;
+      mesh.faces[t].vertexIndex[0] = i * M + j + 1;
+      mesh.faces[t].vertexIndex[1] = i * M + j + 2;
+      mesh.faces[t].vertexIndex[2] = (i - 1) * M + j + 2;
       t++;
     }
-    mesh.faces[t].vertexIndex[0] = (i - 1) * 12 + 12;
-    mesh.faces[t].vertexIndex[1] = (i - 1) * 12 + 1;
-    mesh.faces[t].vertexIndex[2] = i * 12 + 12;
+    mesh.faces[t].vertexIndex[0] = (i - 1) * M + M;
+    mesh.faces[t].vertexIndex[1] = (i - 1) * M + 1;
+    mesh.faces[t].vertexIndex[2] = i * M + M;
     t++;
 
-    mesh.faces[t].vertexIndex[0] = i * 12 + 12;
-    mesh.faces[t].vertexIndex[1] = i * 12 + 1;
-    mesh.faces[t].vertexIndex[2] = (i - 1) * 12 + 1;
+    mesh.faces[t].vertexIndex[0] = i * M + M;
+    mesh.faces[t].vertexIndex[1] = i * M + 1;
+    mesh.faces[t].vertexIndex[2] = (i - 1) * M + 1;
   }
 
-  for (int i = 108, j = 49; i < 119; i++, j++) {
+  for (int i = mesh.nFaces - M, j = mesh.nVertices - M - 1; i < mesh.nFaces - 1; i++, j++) {
     mesh.faces[i].vertexIndex[0] = j;
     mesh.faces[i].vertexIndex[1] = j + 1;
-    mesh.faces[i].vertexIndex[2] = 61;
+    mesh.faces[i].vertexIndex[2] = mesh.nVertices - 1;
   }
-  mesh.faces[119].vertexIndex[0] = 60;
-  mesh.faces[119].vertexIndex[1] = 49;
-  mesh.faces[119].vertexIndex[2] = 61;
+  mesh.faces[mesh.nFaces - 1].vertexIndex[0] = mesh.nVertices -2;
+  mesh.faces[mesh.nFaces - 1].vertexIndex[1] = mesh.nVertices - M - 1;
+  mesh.faces[mesh.nFaces - 1].vertexIndex[2] = mesh.nVertices - 1;
 
+  /* calculate normal */
   for (int i = 0; i < mesh.nFaces; i++) {
     getNormalVector(mesh, i);
   }
