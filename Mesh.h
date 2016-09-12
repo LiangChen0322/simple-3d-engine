@@ -8,7 +8,10 @@
 #include "Quaternion.h"
 #include <memory>
 
-#define PI  (3.1415926535898 / 180)
+#define PI    (3.1415926535898 / 180)
+#define A_PI  (180 / 3.1415926535898)
+#define COS15 (float)(0.9659258)
+
 
 namespace g3 {
 

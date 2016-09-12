@@ -18,6 +18,12 @@ struct Camera {
   int   ratio;
 }; // class Camera
 
+struct Light {
+  Vec3 pos;
+  Vec3 target;
+  int angle;
+};
+
 } // namespace g3
 
 #endif // CAMERA_H

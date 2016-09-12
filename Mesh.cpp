@@ -69,9 +69,10 @@ void g3::loadCube(g3::TriangleMesh& mesh)
 {
   float tR, r;
   float x, y, z;
-  int uratio = 10;
+  int uratio = 5;
   int N = 180 / uratio;
   int M = 360 / uratio;
+  ColorRGBA col = ColorRGBA {0x00, 0x33, 0xFF, 0xFF};
 
   mesh.loc = {0, 0, 0};
   mesh.R = tR = 2;
@@ -87,9 +88,9 @@ void g3::loadCube(g3::TriangleMesh& mesh)
   mesh.rotationZ = 0.0;
 
   mesh.vertices[0].pos = {0, tR * 2, 0};
-  mesh.vertices[0].color = {0, 0, 255, 255};
+  mesh.vertices[0].color = col; //{0, 0, 150, 255};
   mesh.vertices[mesh.nVertices - 1].pos = {0, 0, 0};
-  mesh.vertices[mesh.nVertices - 1].color = {0, 0, 255, 255};
+  mesh.vertices[mesh.nVertices - 1].color = col; //{0, 0, 150, 255};
 
   /* set vertices position */
   for (int i = 1; i < N; i++) {
@@ -101,7 +102,7 @@ void g3::loadCube(g3::TriangleMesh& mesh)
       x = r * std::sin(j * uratio * PI);
       z = r * std::cos(j * uratio * PI);
       mesh.vertices[t + j].pos = {x, y, z};
-      mesh.vertices[t + j].color = {0, 0, 255, 255};
+      mesh.vertices[t + j].color = col; // {0, 0, 150, 255};
     }
   }
 

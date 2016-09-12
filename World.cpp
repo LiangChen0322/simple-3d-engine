@@ -18,7 +18,7 @@ g3::World::World(unsigned int w, unsigned int h):
   height {h},
   frontBuffer {Gdk::Pixbuf::create(Gdk::Colorspace::COLORSPACE_RGB, true, 8, width, height)},
   targetFrameTime {33300000},
-  camera { Vec3{20, 25, 0}, Vec3{-20, -23, 0}, 1280, 0}//camera { Vec3{17, 10, -20}, Vec3{1, 0, 2}, 1280 }
+  camera { Vec3{20, 25, 0}, Vec3{-20, -23, 0}, 1280, 0}
 {
   // initializes the depth buffer.
   depthBuffer.reset(new float[width * height]);
@@ -27,6 +27,10 @@ g3::World::World(unsigned int w, unsigned int h):
   startFrameTime = clock_time();
 
   g3::loadCube(cube);
+
+  light.pos = Vec3 {5, 5, 0};
+  light.target = cube.center - light.pos;
+  light.angle = 5;
 
   // enable mouse wheel detection
   add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK | Gdk::KEY_PRESS_MASK);
@@ -132,6 +136,31 @@ void g3::World::render()
   renderWireframe(viewProjMatrix);
 }
 
+int g3::World::isLight(int fnum)
+{
+  float ans = dotProduct(cube.faces[fnum].normal, light.target);
+  if (ans > 0.0)
+    return 0;
+
+  Vec3 p1 = cube.vertices[cube.faces[fnum].vertexIndex[0]].pos;
+  Vec3 v1 = p1 - light.pos;
+  Vec3 v2 = light.target;
+  float vl1 = std::sqrt(v1[0]*v1[0] + v1[1]*v1[1] + v1[2]*v1[2]);
+  float vl2 = std::sqrt(v2[0]*v2[0] + v2[1]*v2[1] + v2[2]*v2[2]);
+  float dot = dotProduct(v1, v2);
+  float res = dot / (vl1 * vl2);
+  // float res = acos((dot / (vl1 * vl2)) * A_PI);
+  // std::cout << res << std::endl;
+  if (res > COS15) {
+    // std::cout << res << std::endl;
+    float r = 0xCC * ((res - COS15) / (1 - COS15));
+    float g = 0x33 + r;
+    cube.vertices[cube.faces[fnum].vertexIndex[0]].color = ColorRGBA {(int)r, (int)g, 0xFF, 0xFF};
+    // cube.vertices[cube.faces[fnum].vertexIndex[0]].color = ColorRGBA {0x33, 0xFF, 0xFF, 0xFF};
+  } else {
+    cube.vertices[cube.faces[fnum].vertexIndex[0]].color = ColorRGBA {0x00, 0x33, 0xFF, 0xFF};
+  }
+}
 /**
  * Renders the cube wireframe.
  */
@@ -169,6 +198,7 @@ void g3::World::renderWireframe(const g3::Mat4& viewProjMatrix)
       drawLine(mapToWin[4], mapToWin[5], v[2][2], mapToWin[0], mapToWin[1], v[0][2], 
         black, black);
 
+      isLight(i);
       GourandRender(mapToWin[0], mapToWin[1], v[0][2],  color[0],
                     mapToWin[2], mapToWin[3], v[1][2],  color[1],
                     mapToWin[4], mapToWin[5], v[2][2],  color[2]);
